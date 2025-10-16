@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
+import { validateOTP } from '@/utils/validators';
 
 interface OtpVerificationModalProps {
   visible: boolean;
@@ -68,6 +69,10 @@ export default function OtpVerificationModal({
   };
 
   const handleChange = (text: string, index: number) => {
+    if (!/^\d*$/.test(text)) {
+      return;
+    }
+
     if (text.length > 1) {
       text = text.charAt(text.length - 1);
     }
@@ -90,9 +95,10 @@ export default function OtpVerificationModal({
 
   const handleVerify = () => {
     const otpString = otp.join('');
+    const validationError = validateOTP(otpString);
 
-    if (otpString.length !== 4) {
-      setError('Please enter a valid 4-digit OTP');
+    if (validationError) {
+      setError(validationError);
       return;
     }
 

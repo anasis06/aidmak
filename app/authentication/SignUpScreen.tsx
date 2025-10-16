@@ -57,8 +57,17 @@ export default function SignUpScreen() {
     try {
       await signUp(email, otp);
       setShowOtpModal(false);
-      Alert.alert('Success', 'Account created successfully!');
-      router.push('/profileSetup/LetsStartScreen');
+
+      Alert.alert(
+        'Success',
+        'Account created successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.push('/profileSetup/LetsStartScreen')
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to verify OTP');
     }

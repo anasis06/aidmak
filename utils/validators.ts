@@ -85,15 +85,15 @@ export const validateWeight = (weight: number): string | null => {
 
 export const validateOTP = (otp: string): string | null => {
   if (!otp) {
-    return 'OTP is required';
+    return 'Please enter a valid 4-digit OTP';
   }
 
-  if (otp.length !== 6) {
-    return 'OTP must be 6 digits';
+  if (otp.length !== 4) {
+    return 'Please enter a valid 4-digit OTP';
   }
 
   if (!/^\d+$/.test(otp)) {
-    return 'OTP must contain only numbers';
+    return 'Please enter a valid 4-digit OTP';
   }
 
   return null;
