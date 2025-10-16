@@ -9,6 +9,7 @@ import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
 import { validatePhoneNumber } from '@/utils/validators';
 import OtpVerificationModal from './OtpVerificationModal';
+import { sendOTP } from '@/services/otpService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function LoginScreen() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGetOTP = () => {
+  const handleGetOTP = async () => {
     const phoneError = validatePhoneNumber(phoneNumber);
 
     if (phoneError) {
@@ -28,7 +29,24 @@ export default function LoginScreen() {
     }
 
     setError('');
-    setShowOtpModal(true);
+    setIsLoading(true);
+
+    try {
+      const response = await sendOTP(phoneNumber, countryCode);
+
+      if (response.success) {
+        if (response.otpForTesting) {
+          console.log('OTP for testing:', response.otpForTesting);
+        }
+        setShowOtpModal(true);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to send OTP');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to send OTP');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleVerifyOTP = async (otp: string) => {

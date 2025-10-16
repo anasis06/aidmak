@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { validateOTP } from '@/utils/validators';
+import { validateOTP as validateOTPFormat } from '@/utils/validators';
+import { validateOTP, sendOTP } from '@/services/otpService';
 
 interface OtpVerificationModalProps {
   visible: boolean;
@@ -26,6 +27,7 @@ export default function OtpVerificationModal({
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(32);
   const [canResend, setCanResend] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function OtpVerificationModal({
     return visibleDigits + masked + lastDigits;
   };
 
-  const handleChange = (text: string, index: number) => {
+  const handleChange = async (text: string, index: number) => {
     if (!/^\d*$/.test(text)) {
       return;
     }
@@ -84,6 +86,11 @@ export default function OtpVerificationModal({
 
     if (text && index < 3) {
       inputRefs.current[index + 1]?.focus();
+    } else if (text && index === 3) {
+      const completeOtp = newOtp.join('');
+      if (completeOtp.length === 4) {
+        await handleAutoValidate(completeOtp);
+      }
     }
   };
 
@@ -93,30 +100,61 @@ export default function OtpVerificationModal({
     }
   };
 
-  const handleVerify = () => {
-    const otpString = otp.join('');
-    const validationError = validateOTP(otpString);
+  const handleAutoValidate = async (otpString: string) => {
+    const formatError = validateOTPFormat(otpString);
 
-    if (validationError) {
-      setError(validationError);
+    if (formatError) {
+      setError(formatError);
       return;
     }
 
+    setIsValidating(true);
     setError('');
-    onVerify(otpString);
+
+    try {
+      const response = await validateOTP(phoneNumber, countryCode, otpString);
+
+      if (response.success && response.valid) {
+        onVerify(otpString);
+      } else {
+        setError(response.message || 'Incorrect OTP. Please try again.');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Failed to validate OTP');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    const otpString = otp.join('');
+    await handleAutoValidate(otpString);
   };
 
   const isOtpComplete = otp.every(digit => digit !== '');
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (!canResend) return;
 
-    Alert.alert('OTP Resent', 'A new OTP has been sent to your phone number');
-    setOtp(['', '', '', '']);
-    setError('');
-    setTimer(32);
-    setCanResend(false);
-    inputRefs.current[0]?.focus();
+    try {
+      const response = await sendOTP(phoneNumber, countryCode);
+
+      if (response.success) {
+        if (response.otpForTesting) {
+          console.log('OTP for testing:', response.otpForTesting);
+        }
+        Alert.alert('OTP Resent', 'A new OTP has been sent to your phone number');
+        setOtp(['', '', '', '']);
+        setError('');
+        setTimer(32);
+        setCanResend(false);
+        inputRefs.current[0]?.focus();
+      } else {
+        Alert.alert('Error', response.message || 'Failed to resend OTP');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to resend OTP');
+    }
   };
 
   return (
@@ -161,7 +199,14 @@ export default function OtpVerificationModal({
               ))}
             </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {isValidating && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.purple} />
+                <Text style={styles.loadingText}>Validating OTP...</Text>
+              </View>
+            )}
+
+            {error && !isValidating ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <View style={styles.resendSection}>
               <Text style={styles.resendText}>
@@ -178,7 +223,8 @@ export default function OtpVerificationModal({
               variant="primary"
               size="large"
               style={styles.submitButton}
-              disabled={!isOtpComplete}
+              disabled={!isOtpComplete || isValidating}
+              loading={isValidating}
             />
           </View>
         </View>
@@ -260,6 +306,20 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     textAlign: 'center',
     padding: 0,
+  },
+
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Layout.spacing.sm,
+    marginBottom: Layout.spacing.md,
+  },
+
+  loadingText: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.text.secondary,
+    fontWeight: Fonts.weights.medium,
   },
 
   errorText: {

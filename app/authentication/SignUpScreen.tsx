@@ -11,6 +11,7 @@ import { Layout } from '@/constants/Layout';
 import { validateEmail, validateFullName, validatePhoneNumber } from '@/utils/validators';
 import { useAuth } from '@/hooks/useAuth';
 import OtpVerificationModal from './OtpVerificationModal';
+import { sendOTP } from '@/services/otpService';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -45,7 +46,16 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
-      setShowOtpModal(true);
+      const response = await sendOTP(phoneNumber, countryCode);
+
+      if (response.success) {
+        if (response.otpForTesting) {
+          console.log('OTP for testing:', response.otpForTesting);
+        }
+        setShowOtpModal(true);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to send OTP');
+      }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to send OTP');
     } finally {
