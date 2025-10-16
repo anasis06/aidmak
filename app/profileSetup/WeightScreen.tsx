@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
+import { MeasurementTape } from '@/components/MeasurementTape';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -14,14 +15,12 @@ type Unit = 'KG' | 'LB';
 
 const KG_MIN = 30;
 const KG_MAX = 200;
-const ITEM_WIDTH = 4;
 
 export default function WeightScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
-  const scrollViewRef = useRef<ScrollView>(null);
   const [unit, setUnit] = useState<Unit>('KG');
-  const [weightKg, setWeightKg] = useState(50);
+  const [weightKg, setWeightKg] = useState(60);
 
   const handleContinue = () => {
     updateProfile({ weight: weightKg });
@@ -32,40 +31,15 @@ export default function WeightScreen() {
     return Math.round(kg * 2.20462);
   };
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / ITEM_WIDTH);
-    const newWeight = KG_MIN + index;
-    if (newWeight >= KG_MIN && newWeight <= KG_MAX) {
-      setWeightKg(newWeight);
-    }
+  const handleWeightChange = (value: number) => {
+    setWeightKg(value);
   };
 
   const handleUnitChange = (newUnit: Unit) => {
     setUnit(newUnit);
   };
 
-  const renderTape = () => {
-    const items = [];
-    for (let i = KG_MIN; i <= KG_MAX; i++) {
-      const isLarge = i % 10 === 0;
-      const isMedium = i % 5 === 0;
-
-      items.push(
-        <View key={i} style={styles.tapeItem}>
-          <View
-            style={[
-              styles.tick,
-              isLarge && styles.tickLarge,
-              isMedium && !isLarge && styles.tickMedium,
-            ]}
-          />
-          {isLarge && <Text style={styles.tickLabel}>{i}</Text>}
-        </View>
-      );
-    }
-    return items;
-  };
+  const displayValue = unit === 'LB' ? kgToLbs(weightKg) : weightKg;
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -101,39 +75,25 @@ export default function WeightScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.weightDisplay}>
-            <View style={styles.valueContainer}>
-              <Text style={styles.weightValue}>
-                {unit === 'LB' ? kgToLbs(weightKg) : weightKg}
-              </Text>
-              <Text style={styles.weightUnit}>{unit.toLowerCase()}</Text>
+          <View style={styles.measurementSection}>
+            <View style={styles.valueDisplay}>
+              <Text style={styles.valueText}>{displayValue}</Text>
+              <Text style={styles.unitText}>{unit.toLowerCase()}</Text>
             </View>
 
-            <View style={styles.indicatorContainer}>
-              <View style={styles.indicatorLine} />
+            <View style={styles.tapeSection}>
+              <MeasurementTape
+                min={KG_MIN}
+                max={KG_MAX}
+                initialValue={weightKg}
+                step={1}
+                onValueChange={handleWeightChange}
+              />
             </View>
 
-            <View style={styles.tapeContainer}>
-              <View style={styles.tapePadding} />
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-                snapToInterval={ITEM_WIDTH}
-                decelerationRate="fast"
-                contentContainerStyle={styles.tapeContent}
-              >
-                {renderTape()}
-              </ScrollView>
-              <View style={styles.tapePadding} />
-            </View>
-
-            <View style={styles.rulerLabelsContainer}>
-              <Text style={styles.rulerLabel}>{KG_MIN}</Text>
-              <Text style={styles.rulerLabel}>{Math.round((KG_MIN + KG_MAX) / 2)}</Text>
-              <Text style={styles.rulerLabel}>{KG_MAX}</Text>
+            <View style={styles.scaleLabels}>
+              <Text style={styles.scaleLabel}>40</Text>
+              <Text style={styles.scaleLabel}>60</Text>
             </View>
           </View>
         </View>
@@ -211,102 +171,48 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  weightDisplay: {
+  measurementSection: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
   },
 
-  valueContainer: {
+  valueDisplay: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: Layout.spacing.xl,
+    marginBottom: Layout.spacing.xxl,
   },
 
-  weightValue: {
-    fontSize: 64,
+  valueText: {
+    fontSize: 72,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
+    lineHeight: 80,
   },
 
-  weightUnit: {
-    fontSize: Fonts.sizes.lg,
+  unitText: {
+    fontSize: Fonts.sizes.xl,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
     marginLeft: Layout.spacing.sm,
   },
 
-  indicatorContainer: {
+  tapeSection: {
     width: '100%',
-    alignItems: 'center',
-    marginBottom: Layout.spacing.md,
+    marginBottom: Layout.spacing.lg,
   },
 
-  indicatorLine: {
-    width: 2,
-    height: 60,
-    backgroundColor: Colors.text.primary,
-  },
-
-  tapeContainer: {
-    flexDirection: 'row',
-    height: 80,
-    alignItems: 'center',
-    width: '100%',
-  },
-
-  tapePadding: {
-    width: Layout.window.width / 2 - Layout.spacing.lg,
-  },
-
-  tapeContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingVertical: Layout.spacing.md,
-  },
-
-  tapeItem: {
-    width: ITEM_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: 60,
-  },
-
-  tick: {
-    width: 1,
-    height: 8,
-    backgroundColor: Colors.text.tertiary,
-  },
-
-  tickMedium: {
-    height: 16,
-    backgroundColor: Colors.text.secondary,
-  },
-
-  tickLarge: {
-    height: 24,
-    width: 2,
-    backgroundColor: Colors.text.primary,
-  },
-
-  tickLabel: {
-    fontSize: 10,
-    color: Colors.text.secondary,
-    marginTop: 4,
-    fontWeight: Fonts.weights.medium,
-  },
-
-  rulerLabelsContainer: {
+  scaleLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '90%',
+    width: '65%',
     marginTop: Layout.spacing.md,
   },
 
-  rulerLabel: {
-    fontSize: Fonts.sizes.sm,
-    color: Colors.text.tertiary,
+  scaleLabel: {
+    fontSize: Fonts.sizes.lg,
     fontWeight: Fonts.weights.medium,
+    color: Colors.text.secondary,
   },
 
   buttonContainer: {

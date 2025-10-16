@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
+import { MeasurementTape } from '@/components/MeasurementTape';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -14,14 +15,12 @@ type Unit = 'CM' | 'FT';
 
 const CM_MIN = 120;
 const CM_MAX = 250;
-const ITEM_WIDTH = 4;
 
 export default function HeightScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
-  const scrollViewRef = useRef<ScrollView>(null);
   const [unit, setUnit] = useState<Unit>('FT');
-  const [heightCm, setHeightCm] = useState(167);
+  const [heightCm, setHeightCm] = useState(170);
 
   const handleContinue = () => {
     updateProfile({ height: heightCm });
@@ -35,40 +34,15 @@ export default function HeightScreen() {
     return `${feet}.${inches}`;
   };
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / ITEM_WIDTH);
-    const newHeight = CM_MIN + index;
-    if (newHeight >= CM_MIN && newHeight <= CM_MAX) {
-      setHeightCm(newHeight);
-    }
+  const handleHeightChange = (value: number) => {
+    setHeightCm(value);
   };
 
   const handleUnitChange = (newUnit: Unit) => {
     setUnit(newUnit);
   };
 
-  const renderTape = () => {
-    const items = [];
-    for (let i = CM_MIN; i <= CM_MAX; i++) {
-      const isLarge = i % 10 === 0;
-      const isMedium = i % 5 === 0;
-
-      items.push(
-        <View key={i} style={styles.tapeItem}>
-          <View
-            style={[
-              styles.tick,
-              isLarge && styles.tickLarge,
-              isMedium && !isLarge && styles.tickMedium,
-            ]}
-          />
-          {isLarge && <Text style={styles.tickLabel}>{i}</Text>}
-        </View>
-      );
-    }
-    return items;
-  };
+  const displayValue = unit === 'FT' ? cmToFeet(heightCm) : heightCm;
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -104,39 +78,34 @@ export default function HeightScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.heightDisplay}>
-            <View style={styles.valueContainer}>
-              <Text style={styles.heightValue}>
-                {unit === 'FT' ? cmToFeet(heightCm) : heightCm}
-              </Text>
-              <Text style={styles.heightUnit}>{unit.toLowerCase()}</Text>
+          <View style={styles.measurementSection}>
+            <View style={styles.valueDisplay}>
+              <Text style={styles.valueText}>{displayValue}</Text>
+              <Text style={styles.unitText}>{unit.toLowerCase()}</Text>
             </View>
 
-            <View style={styles.indicatorContainer}>
-              <View style={styles.indicatorLine} />
+            <View style={styles.tapeSection}>
+              <MeasurementTape
+                min={CM_MIN}
+                max={CM_MAX}
+                initialValue={heightCm}
+                step={1}
+                onValueChange={handleHeightChange}
+              />
             </View>
 
-            <View style={styles.tapeContainer}>
-              <View style={styles.tapePadding} />
-              <ScrollView
-                ref={scrollViewRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                onScroll={handleScroll}
-                scrollEventThrottle={16}
-                snapToInterval={ITEM_WIDTH}
-                decelerationRate="fast"
-                contentContainerStyle={styles.tapeContent}
-              >
-                {renderTape()}
-              </ScrollView>
-              <View style={styles.tapePadding} />
-            </View>
-
-            <View style={styles.rulerLabelsContainer}>
-              <Text style={styles.rulerLabel}>{CM_MIN}</Text>
-              <Text style={styles.rulerLabel}>{Math.round((CM_MIN + CM_MAX) / 2)}</Text>
-              <Text style={styles.rulerLabel}>{CM_MAX}</Text>
+            <View style={styles.rulerMarks}>
+              <View style={styles.rulerLine} />
+              <View style={styles.rulerTicksContainer}>
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+                <View style={styles.rulerTick} />
+              </View>
             </View>
           </View>
         </View>
@@ -214,102 +183,59 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  heightDisplay: {
+  measurementSection: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
   },
 
-  valueContainer: {
+  valueDisplay: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: Layout.spacing.xl,
+    marginBottom: Layout.spacing.xxl,
   },
 
-  heightValue: {
-    fontSize: 64,
+  valueText: {
+    fontSize: 72,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
+    lineHeight: 80,
   },
 
-  heightUnit: {
-    fontSize: Fonts.sizes.lg,
+  unitText: {
+    fontSize: Fonts.sizes.xl,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
     marginLeft: Layout.spacing.sm,
   },
 
-  indicatorContainer: {
+  tapeSection: {
     width: '100%',
-    alignItems: 'center',
-    marginBottom: Layout.spacing.md,
+    marginBottom: Layout.spacing.lg,
   },
 
-  indicatorLine: {
-    width: 2,
-    height: 60,
-    backgroundColor: Colors.text.primary,
-  },
-
-  tapeContainer: {
-    flexDirection: 'row',
-    height: 80,
-    alignItems: 'center',
-    width: '100%',
-  },
-
-  tapePadding: {
-    width: Layout.window.width / 2 - Layout.spacing.lg,
-  },
-
-  tapeContent: {
-    flexDirection: 'row',
+  rulerMarks: {
     alignItems: 'flex-end',
-    paddingVertical: Layout.spacing.md,
-  },
-
-  tapeItem: {
-    width: ITEM_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: 60,
-  },
-
-  tick: {
-    width: 1,
-    height: 8,
-    backgroundColor: Colors.text.tertiary,
-  },
-
-  tickMedium: {
-    height: 16,
-    backgroundColor: Colors.text.secondary,
-  },
-
-  tickLarge: {
-    height: 24,
-    width: 2,
-    backgroundColor: Colors.text.primary,
-  },
-
-  tickLabel: {
-    fontSize: 10,
-    color: Colors.text.secondary,
-    marginTop: 4,
-    fontWeight: Fonts.weights.medium,
-  },
-
-  rulerLabelsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '90%',
+    paddingRight: Layout.spacing.xxl,
     marginTop: Layout.spacing.md,
   },
 
-  rulerLabel: {
-    fontSize: Fonts.sizes.sm,
-    color: Colors.text.tertiary,
-    fontWeight: Fonts.weights.medium,
+  rulerLine: {
+    width: 2,
+    height: 120,
+    backgroundColor: Colors.text.secondary,
+    marginBottom: Layout.spacing.xs,
+  },
+
+  rulerTicksContainer: {
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+
+  rulerTick: {
+    width: 20,
+    height: 1.5,
+    backgroundColor: Colors.text.tertiary,
   },
 
   buttonContainer: {
