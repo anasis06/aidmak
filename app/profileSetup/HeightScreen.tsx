@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
-import { MeasurementTape } from '@/components/MeasurementTape';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -13,36 +12,60 @@ import { useUser } from '@/hooks/useUser';
 
 type Unit = 'CM' | 'FT';
 
-const CM_MIN = 120;
+const CM_MIN = 100;
 const CM_MAX = 250;
 
 export default function HeightScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
-  const [unit, setUnit] = useState<Unit>('FT');
-  const [heightCm, setHeightCm] = useState(170);
+  const [unit, setUnit] = useState<Unit>('CM');
+  const [heightInput, setHeightInput] = useState('');
+  const [error, setError] = useState('');
+
+  const validateHeight = (value: string): boolean => {
+    if (!value) {
+      setError('');
+      return false;
+    }
+
+    const numValue = parseFloat(value);
+
+    if (isNaN(numValue)) {
+      setError('Please enter a valid number');
+      return false;
+    }
+
+    if (numValue < CM_MIN) {
+      setError(`Height must be at least ${CM_MIN}cm`);
+      return false;
+    }
+
+    if (numValue > CM_MAX) {
+      setError(`Height must be less than ${CM_MAX}cm`);
+      return false;
+    }
+
+    setError('');
+    return true;
+  };
+
+  const handleHeightChange = (value: string) => {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    setHeightInput(numericValue);
+    validateHeight(numericValue);
+  };
 
   const handleContinue = () => {
+    const heightCm = parseFloat(heightInput);
     updateProfile({ height: heightCm });
     router.push('/profileSetup/WeightScreen');
-  };
-
-  const cmToFeet = (cm: number): string => {
-    const totalInches = cm / 2.54;
-    const feet = Math.floor(totalInches / 12);
-    const inches = Math.round(totalInches % 12);
-    return `${feet}.${inches}`;
-  };
-
-  const handleHeightChange = (value: number) => {
-    setHeightCm(value);
   };
 
   const handleUnitChange = (newUnit: Unit) => {
     setUnit(newUnit);
   };
 
-  const displayValue = unit === 'FT' ? cmToFeet(heightCm) : heightCm;
+  const isValid = heightInput && !error;
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -78,40 +101,30 @@ export default function HeightScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.measurementSection}>
-            <View style={styles.valueDisplay}>
-              <Text style={styles.valueText}>{displayValue}</Text>
-              <Text style={styles.unitText}>{unit.toLowerCase()}</Text>
-            </View>
-
-            <View style={styles.tapeSection}>
-              <MeasurementTape
-                min={CM_MIN}
-                max={CM_MAX}
-                initialValue={heightCm}
-                step={1}
-                onValueChange={handleHeightChange}
+          <View style={styles.inputSection}>
+            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
+              <TextInput
+                style={styles.input}
+                value={heightInput}
+                onChangeText={handleHeightChange}
+                placeholder="Enter height"
+                placeholderTextColor={Colors.text.tertiary}
+                keyboardType="numeric"
               />
+              <Text style={styles.inputUnit}>{unit.toLowerCase()}</Text>
             </View>
-
-            <View style={styles.rulerMarks}>
-              <View style={styles.rulerLine} />
-              <View style={styles.rulerTicksContainer}>
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-                <View style={styles.rulerTick} />
-              </View>
-            </View>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button title="Next" onPress={handleContinue} variant="primary" size="large" />
+          <Button
+            title="Next"
+            onPress={handleContinue}
+            variant="primary"
+            size="large"
+            disabled={!isValid}
+          />
         </View>
       </View>
     </SafeAreaContainer>
@@ -183,59 +196,44 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  measurementSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  inputSection: {
+    gap: Layout.spacing.sm,
   },
 
-  valueDisplay: {
+  inputContainer: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Layout.borderRadius.xl,
+    height: 56,
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: Layout.spacing.xxl,
+    alignItems: 'center',
+    paddingHorizontal: Layout.spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.background.secondary,
   },
 
-  valueText: {
-    fontSize: 72,
-    fontWeight: Fonts.weights.bold,
+  inputContainerError: {
+    borderColor: '#ff334b',
+  },
+
+  input: {
+    flex: 1,
+    fontSize: Fonts.sizes.base,
     color: Colors.text.primary,
-    lineHeight: 80,
+    fontWeight: Fonts.weights.medium,
   },
 
-  unitText: {
-    fontSize: Fonts.sizes.xl,
-    fontWeight: Fonts.weights.medium,
+  inputUnit: {
+    fontSize: Fonts.sizes.base,
     color: Colors.text.secondary,
+    fontWeight: Fonts.weights.medium,
     marginLeft: Layout.spacing.sm,
   },
 
-  tapeSection: {
-    width: '100%',
-    marginBottom: Layout.spacing.lg,
-  },
-
-  rulerMarks: {
-    alignItems: 'flex-end',
-    paddingRight: Layout.spacing.xxl,
-    marginTop: Layout.spacing.md,
-  },
-
-  rulerLine: {
-    width: 2,
-    height: 120,
-    backgroundColor: Colors.text.secondary,
-    marginBottom: Layout.spacing.xs,
-  },
-
-  rulerTicksContainer: {
-    alignItems: 'flex-end',
-    gap: 12,
-  },
-
-  rulerTick: {
-    width: 20,
-    height: 1.5,
-    backgroundColor: Colors.text.tertiary,
+  errorText: {
+    fontSize: Fonts.sizes.sm,
+    color: '#ff334b',
+    marginTop: Layout.spacing.xs,
+    marginLeft: Layout.spacing.sm,
   },
 
   buttonContainer: {

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
-import { MeasurementTape } from '@/components/MeasurementTape';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -13,33 +12,60 @@ import { useUser } from '@/hooks/useUser';
 
 type Unit = 'KG' | 'LB';
 
-const KG_MIN = 30;
-const KG_MAX = 200;
+const KG_MIN = 20;
+const KG_MAX = 300;
 
 export default function WeightScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
   const [unit, setUnit] = useState<Unit>('KG');
-  const [weightKg, setWeightKg] = useState(60);
+  const [weightInput, setWeightInput] = useState('');
+  const [error, setError] = useState('');
+
+  const validateWeight = (value: string): boolean => {
+    if (!value) {
+      setError('');
+      return false;
+    }
+
+    const numValue = parseFloat(value);
+
+    if (isNaN(numValue)) {
+      setError('Please enter a valid number');
+      return false;
+    }
+
+    if (numValue < KG_MIN) {
+      setError(`Weight must be at least ${KG_MIN}kg`);
+      return false;
+    }
+
+    if (numValue > KG_MAX) {
+      setError(`Weight must be less than ${KG_MAX}kg`);
+      return false;
+    }
+
+    setError('');
+    return true;
+  };
+
+  const handleWeightChange = (value: string) => {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    setWeightInput(numericValue);
+    validateWeight(numericValue);
+  };
 
   const handleContinue = () => {
+    const weightKg = parseFloat(weightInput);
     updateProfile({ weight: weightKg });
     router.push('/profileSetup/BodyMeasurementsScreen');
-  };
-
-  const kgToLbs = (kg: number): number => {
-    return Math.round(kg * 2.20462);
-  };
-
-  const handleWeightChange = (value: number) => {
-    setWeightKg(value);
   };
 
   const handleUnitChange = (newUnit: Unit) => {
     setUnit(newUnit);
   };
 
-  const displayValue = unit === 'LB' ? kgToLbs(weightKg) : weightKg;
+  const isValid = weightInput && !error;
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -75,31 +101,30 @@ export default function WeightScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.measurementSection}>
-            <View style={styles.valueDisplay}>
-              <Text style={styles.valueText}>{displayValue}</Text>
-              <Text style={styles.unitText}>{unit.toLowerCase()}</Text>
-            </View>
-
-            <View style={styles.tapeSection}>
-              <MeasurementTape
-                min={KG_MIN}
-                max={KG_MAX}
-                initialValue={weightKg}
-                step={1}
-                onValueChange={handleWeightChange}
+          <View style={styles.inputSection}>
+            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
+              <TextInput
+                style={styles.input}
+                value={weightInput}
+                onChangeText={handleWeightChange}
+                placeholder="Enter weight"
+                placeholderTextColor={Colors.text.tertiary}
+                keyboardType="numeric"
               />
+              <Text style={styles.inputUnit}>{unit.toLowerCase()}</Text>
             </View>
-
-            <View style={styles.scaleLabels}>
-              <Text style={styles.scaleLabel}>40</Text>
-              <Text style={styles.scaleLabel}>60</Text>
-            </View>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button title="Next" onPress={handleContinue} variant="primary" size="large" />
+          <Button
+            title="Next"
+            onPress={handleContinue}
+            variant="primary"
+            size="large"
+            disabled={!isValid}
+          />
         </View>
       </View>
     </SafeAreaContainer>
@@ -171,48 +196,44 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  measurementSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  inputSection: {
+    gap: Layout.spacing.sm,
   },
 
-  valueDisplay: {
+  inputContainer: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Layout.borderRadius.xl,
+    height: 56,
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: Layout.spacing.xxl,
+    alignItems: 'center',
+    paddingHorizontal: Layout.spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.background.secondary,
   },
 
-  valueText: {
-    fontSize: 72,
-    fontWeight: Fonts.weights.bold,
+  inputContainerError: {
+    borderColor: '#ff334b',
+  },
+
+  input: {
+    flex: 1,
+    fontSize: Fonts.sizes.base,
     color: Colors.text.primary,
-    lineHeight: 80,
+    fontWeight: Fonts.weights.medium,
   },
 
-  unitText: {
-    fontSize: Fonts.sizes.xl,
-    fontWeight: Fonts.weights.medium,
+  inputUnit: {
+    fontSize: Fonts.sizes.base,
     color: Colors.text.secondary,
+    fontWeight: Fonts.weights.medium,
     marginLeft: Layout.spacing.sm,
   },
 
-  tapeSection: {
-    width: '100%',
-    marginBottom: Layout.spacing.lg,
-  },
-
-  scaleLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '65%',
-    marginTop: Layout.spacing.md,
-  },
-
-  scaleLabel: {
-    fontSize: Fonts.sizes.lg,
-    fontWeight: Fonts.weights.medium,
-    color: Colors.text.secondary,
+  errorText: {
+    fontSize: Fonts.sizes.sm,
+    color: '#ff334b',
+    marginTop: Layout.spacing.xs,
+    marginLeft: Layout.spacing.sm,
   },
 
   buttonContainer: {
