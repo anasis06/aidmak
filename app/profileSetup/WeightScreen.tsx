@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -12,49 +12,59 @@ import { useUser } from '@/hooks/useUser';
 
 type Unit = 'KG' | 'LB';
 
+const KG_MIN = 30;
+const KG_MAX = 200;
+const ITEM_WIDTH = 4;
+
 export default function WeightScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [unit, setUnit] = useState<Unit>('KG');
-  const [weightValue, setWeightValue] = useState(50);
+  const [weightKg, setWeightKg] = useState(50);
 
   const handleContinue = () => {
-    updateProfile({ weight: weightValue });
+    updateProfile({ weight: weightKg });
     router.push('/profileSetup/BodyMeasurementsScreen');
   };
 
-  const renderScale = () => {
-    const marks = [];
-    const minWeight = unit === 'KG' ? 40 : 88;
-    const maxWeight = unit === 'KG' ? 60 : 132;
+  const kgToLbs = (kg: number): number => {
+    return Math.round(kg * 2.20462);
+  };
 
-    for (let i = minWeight; i <= maxWeight; i += (unit === 'KG' ? 5 : 11)) {
-      const isCenter = Math.abs(i - weightValue) < 3;
-      marks.push(
-        <View key={i} style={styles.scaleMark}>
-          <Text style={[styles.scaleLabel, isCenter && styles.scaleLabelCenter]}>{i}</Text>
-          <View style={[styles.tick, isCenter && styles.tickCenter]} />
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / ITEM_WIDTH);
+    const newWeight = KG_MIN + index;
+    if (newWeight >= KG_MIN && newWeight <= KG_MAX) {
+      setWeightKg(newWeight);
+    }
+  };
+
+  const handleUnitChange = (newUnit: Unit) => {
+    setUnit(newUnit);
+  };
+
+  const renderTape = () => {
+    const items = [];
+    for (let i = KG_MIN; i <= KG_MAX; i++) {
+      const isLarge = i % 10 === 0;
+      const isMedium = i % 5 === 0;
+
+      items.push(
+        <View key={i} style={styles.tapeItem}>
+          <View
+            style={[
+              styles.tick,
+              isLarge && styles.tickLarge,
+              isMedium && !isLarge && styles.tickMedium,
+            ]}
+          />
+          {isLarge && <Text style={styles.tickLabel}>{i}</Text>}
         </View>
       );
     }
-    return marks;
-  };
-
-  const renderTicks = () => {
-    const ticks = [];
-    for (let i = 0; i < 30; i++) {
-      const isLong = i % 5 === 0;
-      ticks.push(
-        <View
-          key={i}
-          style={[
-            styles.smallTick,
-            isLong && styles.longTick,
-          ]}
-        />
-      );
-    }
-    return ticks;
+    return items;
   };
 
   return (
@@ -73,10 +83,7 @@ export default function WeightScreen() {
           <View style={styles.unitToggle}>
             <TouchableOpacity
               style={[styles.unitButton, unit === 'KG' && styles.unitButtonActive]}
-              onPress={() => {
-                setUnit('KG');
-                setWeightValue(50);
-              }}
+              onPress={() => handleUnitChange('KG')}
               activeOpacity={0.7}
             >
               <Text style={[styles.unitButtonText, unit === 'KG' && styles.unitButtonTextActive]}>
@@ -85,10 +92,7 @@ export default function WeightScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.unitButton, unit === 'LB' && styles.unitButtonActive]}
-              onPress={() => {
-                setUnit('LB');
-                setWeightValue(110);
-              }}
+              onPress={() => handleUnitChange('LB')}
               activeOpacity={0.7}
             >
               <Text style={[styles.unitButtonText, unit === 'LB' && styles.unitButtonTextActive]}>
@@ -99,19 +103,37 @@ export default function WeightScreen() {
 
           <View style={styles.weightDisplay}>
             <View style={styles.valueContainer}>
-              <Text style={styles.weightValue}>{weightValue}</Text>
+              <Text style={styles.weightValue}>
+                {unit === 'LB' ? kgToLbs(weightKg) : weightKg}
+              </Text>
               <Text style={styles.weightUnit}>{unit.toLowerCase()}</Text>
             </View>
 
-            <View style={styles.indicatorLine} />
+            <View style={styles.indicatorContainer}>
+              <View style={styles.indicatorLine} />
+            </View>
 
-            <View style={styles.scaleContainer}>
-              <View style={styles.scaleTrack}>
-                {renderScale()}
-              </View>
-              <View style={styles.ticksContainer}>
-                {renderTicks()}
-              </View>
+            <View style={styles.tapeContainer}>
+              <View style={styles.tapePadding} />
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                snapToInterval={ITEM_WIDTH}
+                decelerationRate="fast"
+                contentContainerStyle={styles.tapeContent}
+              >
+                {renderTape()}
+              </ScrollView>
+              <View style={styles.tapePadding} />
+            </View>
+
+            <View style={styles.rulerLabelsContainer}>
+              <Text style={styles.rulerLabel}>{KG_MIN}</Text>
+              <Text style={styles.rulerLabel}>{Math.round((KG_MIN + KG_MAX) / 2)}</Text>
+              <Text style={styles.rulerLabel}>{KG_MAX}</Text>
             </View>
           </View>
         </View>
@@ -214,70 +236,77 @@ const styles = StyleSheet.create({
     marginLeft: Layout.spacing.sm,
   },
 
-  indicatorLine: {
-    width: 2,
-    height: 80,
-    backgroundColor: Colors.text.primary,
-    marginBottom: Layout.spacing.lg,
-  },
-
-  scaleContainer: {
+  indicatorContainer: {
     width: '100%',
     alignItems: 'center',
+    marginBottom: Layout.spacing.md,
   },
 
-  scaleTrack: {
+  indicatorLine: {
+    width: 2,
+    height: 60,
+    backgroundColor: Colors.text.primary,
+  },
+
+  tapeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '90%',
-    paddingHorizontal: Layout.spacing.lg,
-    marginBottom: Layout.spacing.sm,
-  },
-
-  scaleMark: {
+    height: 80,
     alignItems: 'center',
+    width: '100%',
   },
 
-  scaleLabel: {
-    fontSize: Fonts.sizes.base,
-    color: Colors.text.tertiary,
-    fontWeight: Fonts.weights.medium,
-    marginBottom: 4,
+  tapePadding: {
+    width: Layout.window.width / 2 - Layout.spacing.lg,
   },
 
-  scaleLabelCenter: {
-    color: Colors.text.primary,
-    fontSize: Fonts.sizes.lg,
+  tapeContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingVertical: Layout.spacing.md,
+  },
+
+  tapeItem: {
+    width: ITEM_WIDTH,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: 60,
   },
 
   tick: {
-    width: 2,
+    width: 1,
     height: 8,
     backgroundColor: Colors.text.tertiary,
   },
 
-  tickCenter: {
-    height: 12,
+  tickMedium: {
+    height: 16,
+    backgroundColor: Colors.text.secondary,
+  },
+
+  tickLarge: {
+    height: 24,
+    width: 2,
     backgroundColor: Colors.text.primary,
   },
 
-  ticksContainer: {
+  tickLabel: {
+    fontSize: 10,
+    color: Colors.text.secondary,
+    marginTop: 4,
+    fontWeight: Fonts.weights.medium,
+  },
+
+  rulerLabelsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '90%',
-    paddingHorizontal: Layout.spacing.lg,
-    height: 20,
+    marginTop: Layout.spacing.md,
   },
 
-  smallTick: {
-    width: 1,
-    height: 6,
-    backgroundColor: Colors.text.tertiary,
-  },
-
-  longTick: {
-    height: 10,
-    backgroundColor: Colors.text.secondary,
+  rulerLabel: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.text.tertiary,
+    fontWeight: Fonts.weights.medium,
   },
 
   buttonContainer: {

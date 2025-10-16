@@ -50,7 +50,7 @@ export default function OnboardingScreen() {
           <View style={[styles.avatarContainer, styles.avatar1]}>
             <View style={styles.avatarCircle}>
               <Image
-                source={require('@/assets/images/uifaces-cartoon-avatar (3) 1.png')}
+                source={require('@/assets/images/avatar-fair.png')}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
@@ -60,7 +60,7 @@ export default function OnboardingScreen() {
           <View style={[styles.avatarContainer, styles.avatar2]}>
             <View style={styles.avatarCircle}>
               <Image
-                source={require('@/assets/images/uifaces-cartoon-avatar (7) 1.png')}
+                source={require('@/assets/images/avatar-medium.png')}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
@@ -70,7 +70,7 @@ export default function OnboardingScreen() {
           <View style={[styles.avatarContainer, styles.avatar3]}>
             <View style={styles.avatarCircle}>
               <Image
-                source={require('@/assets/images/uifaces-cartoon-avatar (8) 1.png')}
+                source={require('@/assets/images/avatar-dark.png')}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />

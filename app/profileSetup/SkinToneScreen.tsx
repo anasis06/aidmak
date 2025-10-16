@@ -154,10 +154,11 @@ const styles = StyleSheet.create({
   },
 
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     marginRight: Layout.spacing.md,
+    backgroundColor: Colors.background.tertiary,
   },
 
   optionText: {

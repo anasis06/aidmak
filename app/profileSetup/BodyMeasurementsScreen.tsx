@@ -16,10 +16,25 @@ interface Measurements {
   hips: string;
 }
 
+interface ValidationErrors {
+  chest: string;
+  waist: string;
+  hips: string;
+}
+
+const MIN_MEASUREMENT = 30;
+const MAX_MEASUREMENT = 200;
+
 export default function BodyMeasurementsScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
   const [measurements, setMeasurements] = useState<Measurements>({
+    chest: '',
+    waist: '',
+    hips: '',
+  });
+
+  const [errors, setErrors] = useState<ValidationErrors>({
     chest: '',
     waist: '',
     hips: '',
@@ -36,14 +51,50 @@ export default function BodyMeasurementsScreen() {
     router.push('/profileSetup/SkinToneScreen');
   };
 
+  const validateMeasurement = (field: keyof Measurements, value: string): string => {
+    if (!value) {
+      return '';
+    }
+
+    const numValue = parseFloat(value);
+
+    if (isNaN(numValue)) {
+      return 'Please enter a valid number';
+    }
+
+    if (numValue < MIN_MEASUREMENT) {
+      return `Measurement must be at least ${MIN_MEASUREMENT}cm`;
+    }
+
+    if (numValue > MAX_MEASUREMENT) {
+      return `Measurement must be less than ${MAX_MEASUREMENT}cm`;
+    }
+
+    return '';
+  };
+
   const updateMeasurement = (field: keyof Measurements, value: string) => {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+
     setMeasurements((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: numericValue,
+    }));
+
+    const error = validateMeasurement(field, numericValue);
+    setErrors((prev) => ({
+      ...prev,
+      [field]: error,
     }));
   };
 
-  const isFormValid = measurements.chest && measurements.waist && measurements.hips;
+  const isFormValid =
+    measurements.chest &&
+    measurements.waist &&
+    measurements.hips &&
+    !errors.chest &&
+    !errors.waist &&
+    !errors.hips;
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -61,7 +112,7 @@ export default function BodyMeasurementsScreen() {
           <View style={styles.formContainer}>
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Chest</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, errors.chest && styles.inputContainerError]}>
                 <TextInput
                   style={styles.input}
                   value={measurements.chest}
@@ -71,11 +122,12 @@ export default function BodyMeasurementsScreen() {
                   keyboardType="numeric"
                 />
               </View>
+              {errors.chest ? <Text style={styles.errorText}>{errors.chest}</Text> : null}
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Waist</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, errors.waist && styles.inputContainerError]}>
                 <TextInput
                   style={styles.input}
                   value={measurements.waist}
@@ -85,11 +137,12 @@ export default function BodyMeasurementsScreen() {
                   keyboardType="numeric"
                 />
               </View>
+              {errors.waist ? <Text style={styles.errorText}>{errors.waist}</Text> : null}
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Hips</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, errors.hips && styles.inputContainerError]}>
                 <TextInput
                   style={styles.input}
                   value={measurements.hips}
@@ -99,6 +152,7 @@ export default function BodyMeasurementsScreen() {
                   keyboardType="numeric"
                 />
               </View>
+              {errors.hips ? <Text style={styles.errorText}>{errors.hips}</Text> : null}
             </View>
           </View>
         </View>
@@ -173,12 +227,25 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     paddingHorizontal: Layout.spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.background.secondary,
+  },
+
+  inputContainerError: {
+    borderColor: Colors.status.error,
   },
 
   input: {
     fontSize: Fonts.sizes.base,
     color: Colors.text.primary,
     fontWeight: Fonts.weights.medium,
+  },
+
+  errorText: {
+    fontSize: Fonts.sizes.sm,
+    color: Colors.status.error,
+    marginTop: Layout.spacing.xs,
+    marginLeft: Layout.spacing.sm,
   },
 
   buttonContainer: {
