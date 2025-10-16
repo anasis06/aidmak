@@ -64,6 +64,8 @@ export default function SignUpScreen() {
     }
   };
 
+  const isFormValid = fullName && phoneNumber && email && Object.keys(errors).length === 0;
+
   return (
     <SafeAreaContainer>
       <KeyboardAvoidingView
@@ -99,6 +101,7 @@ export default function SignUpScreen() {
                 countryCode={countryCode}
                 onCountryCodeChange={setCountryCode}
                 error={errors.phoneNumber}
+                containerStyle={styles.phoneInput}
               />
 
               <InputField
@@ -117,6 +120,7 @@ export default function SignUpScreen() {
                 variant="primary"
                 size="large"
                 loading={isLoading}
+                disabled={!isFormValid}
                 style={styles.signUpButton}
               />
 
@@ -174,15 +178,20 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: Fonts.sizes.base,
     color: Colors.text.secondary,
-    marginBottom: Layout.spacing.xxl,
+    marginBottom: Layout.spacing.xxl * 2,
+    lineHeight: 22,
   },
 
   form: {
     width: '100%',
   },
 
+  phoneInput: {
+    marginBottom: Layout.spacing.xl,
+  },
+
   signUpButton: {
-    marginTop: Layout.spacing.lg,
+    marginTop: Layout.spacing.xxl,
   },
 
   loginSection: {

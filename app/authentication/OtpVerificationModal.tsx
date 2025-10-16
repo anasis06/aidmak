@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { validateOTP } from '@/utils/validators';
 
 interface OtpVerificationModalProps {
   visible: boolean;
@@ -22,7 +21,7 @@ export default function OtpVerificationModal({
   phoneNumber = '',
   countryCode = '+91',
 }: OtpVerificationModalProps) {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '']);
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(32);
   const [canResend, setCanResend] = useState(false);
@@ -32,8 +31,11 @@ export default function OtpVerificationModal({
     if (visible) {
       setTimer(32);
       setCanResend(false);
-      setOtp(['', '', '', '', '', '']);
+      setOtp(['', '', '', '']);
       setError('');
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 300);
     }
   }, [visible]);
 
@@ -58,10 +60,11 @@ export default function OtpVerificationModal({
   }, [visible, timer]);
 
   const maskPhoneNumber = (phone: string) => {
-    if (phone.length <= 4) return phone;
-    const lastFour = phone.slice(-4);
-    const masked = '*'.repeat(Math.min(phone.length - 4, 6));
-    return masked + lastFour;
+    if (phone.length <= 2) return phone;
+    const visibleDigits = phone.slice(0, 3);
+    const masked = '*'.repeat(Math.max(phone.length - 6, 0));
+    const lastDigits = phone.slice(-3);
+    return visibleDigits + masked + lastDigits;
   };
 
   const handleChange = (text: string, index: number) => {
@@ -74,7 +77,7 @@ export default function OtpVerificationModal({
     setOtp(newOtp);
     setError('');
 
-    if (text && index < 5) {
+    if (text && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -87,10 +90,9 @@ export default function OtpVerificationModal({
 
   const handleVerify = () => {
     const otpString = otp.join('');
-    const validationError = validateOTP(otpString);
 
-    if (validationError) {
-      setError('invalid');
+    if (otpString.length !== 4) {
+      setError('Please enter a valid 4-digit OTP');
       return;
     }
 
@@ -98,23 +100,17 @@ export default function OtpVerificationModal({
     onVerify(otpString);
   };
 
-  const handleTryAgain = () => {
-    setOtp(['', '', '', '', '', '']);
-    setError('');
-    inputRefs.current[0]?.focus();
-  };
-
   const isOtpComplete = otp.every(digit => digit !== '');
-  const hasError = error === 'invalid';
 
   const handleResend = () => {
     if (!canResend) return;
 
     Alert.alert('OTP Resent', 'A new OTP has been sent to your phone number');
-    setOtp(['', '', '', '', '', '']);
+    setOtp(['', '', '', '']);
     setError('');
     setTimer(32);
     setCanResend(false);
+    inputRefs.current[0]?.focus();
   };
 
   return (
@@ -127,7 +123,7 @@ export default function OtpVerificationModal({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.backButton} onPress={onClose}>
-            <ArrowLeft size={24} color={Colors.text.primary} />
+            <ChevronLeft size={24} color={Colors.text.primary} />
           </TouchableOpacity>
 
           <View style={styles.contentContainer}>
@@ -142,45 +138,32 @@ export default function OtpVerificationModal({
 
             <View style={styles.otpContainer}>
               {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
-                  style={[styles.otpInput, hasError && styles.otpInputError]}
-                  value={digit}
-                  onChangeText={(text) => handleChange(text, index)}
-                  onKeyPress={({ nativeEvent }) =>
-                    handleKeyPress(nativeEvent.key, index)
-                  }
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  selectTextOnFocus
-                  editable={!hasError}
-                />
+                <View key={index} style={styles.otpBox}>
+                  <TextInput
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    style={styles.otpInput}
+                    value={digit}
+                    onChangeText={(text) => handleChange(text, index)}
+                    onKeyPress={({ nativeEvent }) =>
+                      handleKeyPress(nativeEvent.key, index)
+                    }
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    selectTextOnFocus
+                  />
+                </View>
               ))}
             </View>
 
-            {hasError && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>OTP entered is Invalid</Text>
-                <TouchableOpacity onPress={handleTryAgain}>
-                  <Text style={styles.tryAgainText}>Try again</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <View style={styles.resendSection}>
-              <Text style={[styles.resendText, !canResend && styles.resendTextDisabled]}>
+              <Text style={styles.resendText}>
                 Resend code in{' '}
                 <Text style={styles.timerText}>
-                  {timer} seconds
+                  {timer} seconds.
                 </Text>
-                {canResend && '.'}
               </Text>
-              {canResend && (
-                <TouchableOpacity onPress={handleResend}>
-                  <Text style={styles.resendLink}> Resend now</Text>
-                </TouchableOpacity>
-              )}
             </View>
 
             <Button
@@ -188,8 +171,8 @@ export default function OtpVerificationModal({
               onPress={handleVerify}
               variant="primary"
               size="large"
-              style={[styles.submitButton, hasError && styles.submitButtonDisabled]}
-              disabled={!isOtpComplete || hasError}
+              style={styles.submitButton}
+              disabled={!isOtpComplete}
             />
           </View>
         </View>
@@ -201,18 +184,19 @@ export default function OtpVerificationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   modalContainer: {
     backgroundColor: Colors.background.primary,
-    borderTopLeftRadius: Layout.borderRadius.xxl,
-    borderTopRightRadius: Layout.borderRadius.xxl,
+    borderRadius: Layout.borderRadius.xxl,
     paddingTop: Layout.spacing.xl,
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.xl,
     paddingBottom: Layout.spacing.xxl,
-    minHeight: '70%',
+    width: '90%',
+    maxWidth: 400,
   },
 
   backButton: {
@@ -222,9 +206,7 @@ const styles = StyleSheet.create({
   },
 
   contentContainer: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
 
   title: {
@@ -239,9 +221,8 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.sm,
     color: Colors.text.secondary,
     textAlign: 'center',
-    marginBottom: Layout.spacing.xxl,
+    marginBottom: Layout.spacing.xxl * 1.5,
     lineHeight: 20,
-    paddingHorizontal: Layout.spacing.md,
   },
 
   phoneNumber: {
@@ -252,52 +233,39 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Layout.spacing.sm,
+    gap: Layout.spacing.md,
     width: '100%',
-    marginBottom: Layout.spacing.xl,
-    paddingHorizontal: Layout.spacing.sm,
+    marginBottom: Layout.spacing.md,
+  },
+
+  otpBox: {
+    flex: 1,
+    maxWidth: 70,
   },
 
   otpInput: {
-    width: 50,
-    height: 60,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: Layout.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border.secondary,
-    fontSize: Fonts.sizes.xxxl,
+    width: '100%',
+    height: 70,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.text.primary,
+    fontSize: 40,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
     textAlign: 'center',
-  },
-
-  otpInputError: {
-    borderColor: Colors.status.error,
-  },
-
-  errorContainer: {
-    alignItems: 'center',
-    marginBottom: Layout.spacing.lg,
+    padding: 0,
   },
 
   errorText: {
     fontSize: Fonts.sizes.sm,
-    color: Colors.status.error,
+    color: '#ff334b',
     fontWeight: Fonts.weights.medium,
-    marginBottom: Layout.spacing.xs,
-    textAlign: 'center',
-  },
-
-  tryAgainText: {
-    fontSize: Fonts.sizes.sm,
-    color: Colors.text.secondary,
+    marginBottom: Layout.spacing.md,
     textAlign: 'center',
   },
 
   resendSection: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: Layout.spacing.xxl,
   },
 
@@ -306,26 +274,12 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
 
-  resendTextDisabled: {
-    color: Colors.text.tertiary,
-  },
-
   timerText: {
     color: Colors.text.primary,
     fontWeight: Fonts.weights.semibold,
   },
 
-  resendLink: {
-    fontSize: Fonts.sizes.sm,
-    color: Colors.primary.purple,
-    fontWeight: Fonts.weights.semibold,
-  },
-
   submitButton: {
     width: '100%',
-  },
-
-  submitButtonDisabled: {
-    opacity: 0.5,
   },
 });

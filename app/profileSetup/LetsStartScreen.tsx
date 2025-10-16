@@ -26,14 +26,6 @@ export default function LetsStartScreen() {
             <View style={[styles.circle, styles.circle3]} />
           </View>
 
-          <View style={styles.platformContainer}>
-            <Image
-              source={require('@/assets/images/Vector.png')}
-              style={styles.platformImage}
-              resizeMode="contain"
-            />
-          </View>
-
           <View style={styles.mainIllustrationContainer}>
             <Image
               source={require('@/assets/images/Group.png')}
@@ -46,6 +38,14 @@ export default function LetsStartScreen() {
             <Image
               source={require('@/assets/images/OBJECTS.png')}
               style={styles.objectsImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View style={styles.platformContainer}>
+            <Image
+              source={require('@/assets/images/Vector.png')}
+              style={styles.platformImage}
               resizeMode="contain"
             />
           </View>
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    marginTop: height * 0.05,
+    paddingTop: height * 0.08,
   },
 
   backgroundShapes: {
@@ -112,51 +112,39 @@ const styles = StyleSheet.create({
   circle: {
     position: 'absolute',
     borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
 
   circle1: {
-    width: 280,
-    height: 280,
-    backgroundColor: 'rgba(60, 60, 60, 0.8)',
+    width: 240,
+    height: 240,
+    backgroundColor: 'rgba(60, 60, 60, 0.9)',
+    left: '8%',
+    top: '18%',
   },
 
   circle2: {
-    width: 140,
-    height: 140,
-    top: 40,
-    right: width * 0.15,
-    backgroundColor: 'rgba(80, 80, 80, 0.6)',
+    width: 180,
+    height: 180,
+    backgroundColor: 'rgba(50, 50, 50, 0.7)',
+    right: '5%',
+    top: '12%',
   },
 
   circle3: {
-    width: 100,
-    height: 100,
-    bottom: 100,
-    right: width * 0.2,
-    backgroundColor: 'rgba(70, 70, 70, 0.7)',
-  },
-
-  platformContainer: {
-    position: 'absolute',
-    bottom: 0,
-    width: width * 0.8,
-    height: 40,
-    zIndex: 1,
-  },
-
-  platformImage: {
-    width: '100%',
-    height: '100%',
+    width: 120,
+    height: 120,
+    backgroundColor: 'rgba(45, 45, 45, 0.8)',
+    right: '8%',
+    bottom: '20%',
   },
 
   mainIllustrationContainer: {
-    width: 280,
-    height: 320,
+    width: 220,
+    height: 300,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 3,
-    marginBottom: 20,
+    zIndex: 10,
+    marginBottom: 30,
   },
 
   mainIllustration: {
@@ -166,11 +154,11 @@ const styles = StyleSheet.create({
 
   objectsContainer: {
     position: 'absolute',
-    right: width * 0.12,
-    top: '30%',
-    width: 80,
-    height: 120,
-    zIndex: 2,
+    right: '10%',
+    top: '25%',
+    width: 60,
+    height: 90,
+    zIndex: 5,
   },
 
   objectsImage: {
@@ -178,13 +166,26 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  plantContainer: {
+  platformContainer: {
     position: 'absolute',
     bottom: 20,
-    right: width * 0.15,
-    width: 50,
-    height: 60,
-    zIndex: 4,
+    width: width * 0.7,
+    height: 30,
+    zIndex: 1,
+  },
+
+  platformImage: {
+    width: '100%',
+    height: '100%',
+  },
+
+  plantContainer: {
+    position: 'absolute',
+    bottom: 35,
+    right: '18%',
+    width: 45,
+    height: 55,
+    zIndex: 15,
   },
 
   plantImage: {
@@ -194,6 +195,7 @@ const styles = StyleSheet.create({
 
   textSection: {
     marginBottom: Layout.spacing.xl,
+    paddingHorizontal: Layout.spacing.sm,
   },
 
   title: {
