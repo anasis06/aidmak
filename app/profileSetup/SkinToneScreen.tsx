@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -10,15 +10,46 @@ import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
 import { useUser } from '@/hooks/useUser';
 
-export default function GenderChooseScreen() {
+type SkinTone = 'fair' | 'medium' | 'dusky' | 'dark';
+
+interface SkinToneOption {
+  id: SkinTone;
+  label: string;
+  image: any;
+}
+
+const skinToneOptions: SkinToneOption[] = [
+  {
+    id: 'fair',
+    label: 'Fair',
+    image: require('@/assets/images/avatar-fair.png'),
+  },
+  {
+    id: 'medium',
+    label: 'Medium',
+    image: require('@/assets/images/avatar-medium.png'),
+  },
+  {
+    id: 'dusky',
+    label: 'Dusky',
+    image: require('@/assets/images/avatar-medium.png'),
+  },
+  {
+    id: 'dark',
+    label: 'Dark',
+    image: require('@/assets/images/avatar-dark.png'),
+  },
+];
+
+export default function SkinToneScreen() {
   const router = useRouter();
   const { updateProfile } = useUser();
-  const [selectedGender, setSelectedGender] = useState<'male' | 'female' | 'other' | null>(null);
+  const [selectedTone, setSelectedTone] = useState<SkinTone | null>(null);
 
   const handleContinue = () => {
-    if (selectedGender) {
-      updateProfile({ gender: selectedGender });
-      router.push('/profileSetup/HeightScreen');
+    if (selectedTone) {
+      updateProfile({ skinTone: selectedTone });
+      router.push('/(tabs)');
     }
   };
 
@@ -28,45 +59,29 @@ export default function GenderChooseScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={1} total={5} />
+        <ProgressBar progress={5} total={5} />
       </View>
 
       <View style={styles.container}>
-        <Text style={styles.title}>What's your gender?</Text>
+        <View style={styles.contentSection}>
+          <Text style={styles.title}>What is your skin color?</Text>
 
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={[styles.option, selectedGender === 'male' && styles.selectedOption]}
-            onPress={() => setSelectedGender('male')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.optionText}>Male</Text>
-            <View style={[styles.radio, selectedGender === 'male' && styles.radioSelected]}>
-              {selectedGender === 'male' && <View style={styles.radioDot} />}
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.option, selectedGender === 'female' && styles.selectedOption]}
-            onPress={() => setSelectedGender('female')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.optionText}>Female</Text>
-            <View style={[styles.radio, selectedGender === 'female' && styles.radioSelected]}>
-              {selectedGender === 'female' && <View style={styles.radioDot} />}
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.option, selectedGender === 'other' && styles.selectedOption]}
-            onPress={() => setSelectedGender('other')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.optionText}>Other</Text>
-            <View style={[styles.radio, selectedGender === 'other' && styles.radioSelected]}>
-              {selectedGender === 'other' && <View style={styles.radioDot} />}
-            </View>
-          </TouchableOpacity>
+          <View style={styles.optionsContainer}>
+            {skinToneOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[styles.option, selectedTone === option.id && styles.selectedOption]}
+                onPress={() => setSelectedTone(option.id)}
+                activeOpacity={0.7}
+              >
+                <Image source={option.image} style={styles.avatar} resizeMode="cover" />
+                <Text style={styles.optionText}>{option.label}</Text>
+                <View style={[styles.radio, selectedTone === option.id && styles.radioSelected]}>
+                  {selectedTone === option.id && <View style={styles.radioDot} />}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.buttonContainer}>
@@ -75,7 +90,7 @@ export default function GenderChooseScreen() {
             onPress={handleContinue}
             variant="primary"
             size="large"
-            disabled={!selectedGender}
+            disabled={!selectedTone}
           />
         </View>
       </View>
@@ -107,6 +122,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
+  contentSection: {
+    flex: 1,
+  },
+
   title: {
     fontSize: 28,
     fontWeight: Fonts.weights.bold,
@@ -116,16 +135,14 @@ const styles = StyleSheet.create({
   },
 
   optionsContainer: {
-    flex: 1,
     gap: Layout.spacing.md,
   },
 
   option: {
-    height: 70,
+    height: 80,
     backgroundColor: Colors.background.secondary,
     borderRadius: Layout.borderRadius.xl,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Layout.spacing.lg,
     borderWidth: 1,
@@ -136,7 +153,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.background.secondary,
   },
 
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: Layout.spacing.md,
+  },
+
   optionText: {
+    flex: 1,
     fontSize: Fonts.sizes.lg,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.primary,
