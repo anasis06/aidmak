@@ -49,7 +49,7 @@ export default function SkinToneScreen() {
   const handleContinue = () => {
     if (selectedTone) {
       updateProfile({ skinTone: selectedTone });
-      router.push('/(tabs)');
+      router.push('/profileSetup/UploadPictureScreen');
     }
   };
 
@@ -59,7 +59,7 @@ export default function SkinToneScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={5} total={5} />
+        <ProgressBar progress={5} total={7} />
       </View>
 
       <View style={styles.container}>

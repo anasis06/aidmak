@@ -102,7 +102,7 @@ export default function BodyMeasurementsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={4} total={5} />
+        <ProgressBar progress={4} total={7} />
       </View>
 
       <View style={styles.container}>

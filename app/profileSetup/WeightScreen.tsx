@@ -73,7 +73,7 @@ export default function WeightScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={3} total={5} />
+        <ProgressBar progress={3} total={7} />
       </View>
 
       <View style={styles.container}>
