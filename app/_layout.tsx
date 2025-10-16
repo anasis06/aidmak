@@ -1,0 +1,30 @@
+import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { AuthProvider } from '@/context/AuthContext';
+import { UserProvider } from '@/context/UserContext';
+import { AppProvider } from '@/context/AppContext';
+
+export default function RootLayout() {
+  useFrameworkReady();
+
+  return (
+    <AppProvider>
+      <AuthProvider>
+        <UserProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="authentication/OnboardingScreen" />
+            <Stack.Screen name="authentication/LoginScreen" />
+            <Stack.Screen name="authentication/SignUpScreen" />
+            <Stack.Screen name="profileSetup/LetsStartScreen" />
+            <Stack.Screen name="profileSetup/GenderChooseScreen" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="light" />
+        </UserProvider>
+      </AuthProvider>
+    </AppProvider>
+  );
+}
