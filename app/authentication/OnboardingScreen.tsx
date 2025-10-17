@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
 
   avatarCircle: {
-    width: 120,
+    width: 110,
     height: 120,
     borderRadius: 60,
     overflow: 'hidden',
