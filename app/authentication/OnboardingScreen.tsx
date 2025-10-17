@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
   },
 
   dot4: {
-    width: 14,
-    height: 14,
+     width: 12 * 4,
+    height: 12 * 4,
     bottom: 160,
     right: 20,
     backgroundColor: Colors.accent.peach,
