@@ -50,7 +50,7 @@ export default function OnboardingScreen() {
           <View style={[styles.avatarContainer, styles.avatar1]}>
             <View style={styles.avatarCircle}>
               <Image
-                source={require('@/assets/images/avatar-fair.png')}
+                source={require('@/assets/images/avatar-medium.png')}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
