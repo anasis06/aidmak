@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     bottom: 160,
-    right: 20,
+    right: 50,
     backgroundColor: Colors.accent.peach,
   },
 
