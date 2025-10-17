@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
   },
 
   circle3: {
-    width: 120,
-    height: 120,
+    width: 0,
+    height: 0,
     backgroundColor: 'rgba(45, 45, 45, 0.8)',
     right: '8%',
     bottom: '20%',
