@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
   },
 
   dot2: {
-    width: 8,
-    height: 8,
+    width: 12 * 4,
+    height: 12 * 4,
     top: 60,
     right: width * 0.08,
     backgroundColor: Colors.accent.lightPurple,
