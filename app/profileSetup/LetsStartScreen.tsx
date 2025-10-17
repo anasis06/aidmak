@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    marginBottom: -50,
+    marginBottom: -80,
   },
 
   mainIllustration: {
