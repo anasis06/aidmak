@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   objectsContainer: {
     position: 'absolute',
     right: '16%',
-    top: '45%',
+    top: '35%',
     width: 240,
     height: 240,
     zIndex: 5,
