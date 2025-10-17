@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
 
   dot5: {
-    width: 6,
+    width: 20,
     height: 6,
     top: 140,
     right: width * 0.25,
