@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   dot2: {
     width: 12 * 4,
     height: 12 * 4,
-    top: 60,
+    top: -20,
     right: width * 0.08,
     backgroundColor: Colors.accent.lightPurple,
   },
