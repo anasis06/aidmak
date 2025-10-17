@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   dot1: {
     width: 12 * 4,
     height: 12 * 4,
-    top: -30,
+    top: -50,
     left: -40,
     backgroundColor: Colors.accent.cream,
   },
@@ -180,8 +180,8 @@ const styles = StyleSheet.create({
   dot2: {
     width: 12 * 4,
     height: 12 * 4,
-    top: -20,
-    right: width * 0.08,
+    top: -50,
+    right: -40,
     backgroundColor: Colors.accent.lightPurple,
   },
 
