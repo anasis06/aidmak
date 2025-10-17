@@ -12,6 +12,7 @@ import { validateEmail, validateFullName, validatePhoneNumber } from '@/utils/va
 import { useAuth } from '@/hooks/useAuth';
 import OtpVerificationModal from './OtpVerificationModal';
 import { sendOTP } from '@/services/otpService';
+import { userService } from '@/services/userService';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function SignUpScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -46,6 +48,29 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
+      const existsCheck = await userService.checkUserExists(email, phoneNumber, countryCode);
+
+      if (existsCheck.exists) {
+        const newErrors = { ...errors };
+        if (existsCheck.field === 'email') {
+          newErrors.email = existsCheck.message || 'This email already exists.';
+        } else if (existsCheck.field === 'phone') {
+          newErrors.phoneNumber = existsCheck.message || 'This number already exists.';
+        }
+        setErrors(newErrors);
+        setIsLoading(false);
+        return;
+      }
+
+      const newUser = await userService.createUser({
+        fullName,
+        email,
+        phoneNumber,
+        countryCode,
+      });
+
+      setCurrentUserId(newUser.id);
+
       const response = await sendOTP(phoneNumber, countryCode);
 
       if (response.success) {
@@ -65,7 +90,10 @@ export default function SignUpScreen() {
 
   const handleVerifyOTP = async (otp: string) => {
     try {
-      await signUp(email, otp);
+      if (currentUserId) {
+        await userService.verifyUser(currentUserId);
+      }
+
       setShowOtpModal(false);
 
       Alert.alert(

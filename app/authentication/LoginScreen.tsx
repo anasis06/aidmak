@@ -10,6 +10,7 @@ import { Layout } from '@/constants/Layout';
 import { validatePhoneNumber } from '@/utils/validators';
 import OtpVerificationModal from './OtpVerificationModal';
 import { sendOTP } from '@/services/otpService';
+import { userService } from '@/services/userService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const handleGetOTP = async () => {
     const phoneError = validatePhoneNumber(phoneNumber);
@@ -32,6 +34,16 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
+      const user = await userService.getUserByPhone(phoneNumber, countryCode);
+
+      if (!user) {
+        setError('This user does not exist.');
+        setIsLoading(false);
+        return;
+      }
+
+      setCurrentUser(user);
+
       const response = await sendOTP(phoneNumber, countryCode);
 
       if (response.success) {
@@ -50,17 +62,22 @@ export default function LoginScreen() {
   };
 
   const handleVerifyOTP = async (otp: string) => {
-    setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      Alert.alert('Success', 'Logged in successfully!');
-      setShowOtpModal(false);
-      router.replace('/(tabs)');
+      Alert.alert(
+        'Success',
+        'Logged in successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setShowOtpModal(false);
+              router.replace('/(tabs)');
+            }
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to verify OTP');
-    } finally {
-      setIsLoading(false);
     }
   };
 
