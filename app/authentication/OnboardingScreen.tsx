@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    marginTop: height * 0.05,
+    marginTop: height * 0.15,
   },
 
   avatarContainer: {
