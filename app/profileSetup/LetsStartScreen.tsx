@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
   },
 
   circle2: {
-    width: 180,
-    height: 180,
+    width: 0,
+    height: 0,
     backgroundColor: 'rgba(50, 50, 50, 0.7)',
     right: '5%',
     top: '12%',
