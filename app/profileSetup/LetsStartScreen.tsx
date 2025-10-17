@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
 
   platformContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 45,
     width: width * 0.7,
     height: 30,
     zIndex: 1,
