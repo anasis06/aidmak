@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
 
   plantContainer: {
     position: 'absolute',
-    bottom: 35,
+    bottom: 55,
     right: '18%',
     width: 45,
     height: 55,
