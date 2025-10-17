@@ -186,10 +186,10 @@ const styles = StyleSheet.create({
   },
 
   dot3: {
-    width: 10,
-    height: 10,
+    width: 12 * 4,
+    height: 12 * 4,
     bottom: 80,
-    left: width * 0.12,
+    left: -40,
     backgroundColor: Colors.accent.mint,
   },
 
