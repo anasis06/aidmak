@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
 
   mainIllustrationContainer: {
     width: 180,
-    height: 300,
+    height: 280,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
