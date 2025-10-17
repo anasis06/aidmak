@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 10,
     marginBottom: -80,
+    left: 20
   },
 
   mainIllustration: {
