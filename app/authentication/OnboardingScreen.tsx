@@ -202,8 +202,8 @@ const styles = StyleSheet.create({
   },
 
   dot5: {
-    width: 80,
-    height: 80,
+    width: 10,
+    height: 10,
     top: -70,
     right: width * 0.25,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
