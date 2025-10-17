@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
 
   dot1: {
     width: 24,
-    height: 12,
+    height: 24,
     top: 10,
     left: width * 0.1,
     backgroundColor: Colors.accent.cream,
