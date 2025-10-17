@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
 
   avatarImage: {
     width: '120%',
-    height: '100%',
+    height: '120%',
   },
 
   decorativeDot: {
