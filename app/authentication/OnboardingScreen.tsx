@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
   },
 
   dot1: {
-    width: 12 * 3,
-    height: 12 * 3,
+    width: 12 * 4,
+    height: 12 * 4,
     top: 10,
     left: -10,
     backgroundColor: Colors.accent.cream,
