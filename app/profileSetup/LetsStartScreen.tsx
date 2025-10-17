@@ -139,12 +139,12 @@ const styles = StyleSheet.create({
   },
 
   mainIllustrationContainer: {
-    width: 520,
+    width: 220,
     height: 300,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    marginBottom: 30,
+    marginBottom: 50,
   },
 
   mainIllustration: {
