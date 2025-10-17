@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
 
   dot1: {
-    width: 12,
+    width: 24,
     height: 12,
     top: 10,
     left: width * 0.1,
