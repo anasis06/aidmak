@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
   },
 
   avatarImage: {
-    width: '140%',
-    height: '140%',
+    width: '150%',
+    height: '150%',
     bottom: 10
   },
 
