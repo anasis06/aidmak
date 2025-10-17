@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     width: '150%',
     height: '150%',
     bottom: 30,
-    right: 20
+    right: 30
   },
 
   decorativeDot: {
