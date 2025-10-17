@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     shadowColor: '#000',
     shadowOffset: {
-      width: 0,
+      width: 20,
       height: 8,
     },
     shadowOpacity: 0.3,
@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
-    size: 'cover'
   },
 
   decorativeDot: {
