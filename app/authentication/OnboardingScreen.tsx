@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     width: 12 * 4,
     height: 12 * 4,
     top: -20,
-    left: -30,
+    left: -40,
     backgroundColor: Colors.accent.cream,
   },
 
