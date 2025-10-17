@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
 
   avatar1: {
-    top: -80,
+    top: -30,
     left: width * 0.15,
   },
 
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
 
   avatar3: {
     top: 100,
-    left: width * 0.35,
+    left: width * 1.25,
   },
 
   avatarCircle: {
