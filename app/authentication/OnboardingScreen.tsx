@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '150%',
     height: '150%',
-    bottom: 20,
+    bottom: 30,
     right: 20
   },
 
