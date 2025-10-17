@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     right: '20%',
     top: '25%',
     width: 220,
-    height: 210,
+    height: 220,
     zIndex: 5,
   },
 
