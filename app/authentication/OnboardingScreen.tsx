@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     top: -70,
-    right: width * 0.25,
+    right: 80,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
 
