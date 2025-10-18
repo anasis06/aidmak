@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
 
   emailField: {
-    marginBottom: Layout.spacing.xl
+    marginBottom: Layout.spacing.xl,
   }
 
   signUpButton: {
