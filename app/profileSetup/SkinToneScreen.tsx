@@ -22,22 +22,22 @@ const skinToneOptions: SkinToneOption[] = [
   {
     id: 'fair',
     label: 'Fair',
-    image: require('@/assets/images/avatar-fair.png'),
+    image: require('@/assets/images/unnamed 1.png'),
   },
   {
     id: 'medium',
     label: 'Medium',
-    image: require('@/assets/images/avatar-medium.png'),
+    image: require('@/assets/images/unnamed 1 (1).png'),
   },
   {
     id: 'dusky',
     label: 'Dusky',
-    image: require('@/assets/images/avatar-medium.png'),
+    image: require('@/assets/images/unnamed 1 (2).png'),
   },
   {
     id: 'dark',
     label: 'Dark',
-    image: require('@/assets/images/avatar-dark.png'),
+    image: require('@/assets/images/unnamed 1 (3).png'),
   },
 ];
 
@@ -64,7 +64,7 @@ export default function SkinToneScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={5} total={7} />
+        <ProgressBar progress={5} total={8} />
       </View>
 
       <View style={styles.container}>

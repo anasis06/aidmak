@@ -75,7 +75,7 @@ export default function UploadPictureScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={6} total={7} />
+        <ProgressBar progress={6} total={8} />
       </View>
 
       <View style={styles.container}>
