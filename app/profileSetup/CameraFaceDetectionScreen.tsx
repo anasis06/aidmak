@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform, Image } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { ChevronLeft, Camera as CameraIcon } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -8,20 +8,21 @@ import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
-import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const OVAL_WIDTH = SCREEN_WIDTH * 0.7;
-const OVAL_HEIGHT = SCREEN_HEIGHT * 0.5;
+const CIRCLE_SIZE = SCREEN_WIDTH * 0.75;
 
 export default function CameraFaceDetectionScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
   const cameraRef = useRef<CameraView>(null);
   const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (!permission?.granted && permission?.canAskAgain) {
@@ -30,29 +31,46 @@ export default function CameraFaceDetectionScreen() {
   }, [permission]);
 
   const takePicture = async () => {
+    setError('');
     if (cameraRef.current) {
       try {
         const photo = await cameraRef.current.takePictureAsync({
           quality: 1,
         });
         if (photo) {
-          setCapturedImage(photo.uri);
+          const isValidFace = await validateFaceInCircle(photo.uri);
+          if (isValidFace) {
+            setCapturedImage(photo.uri);
+            setShowPreview(true);
+          } else {
+            setError('Keep your face in the circle');
+            setTimeout(() => setError(''), 3000);
+          }
         }
       } catch (error) {
         console.error('Error taking picture:', error);
+        setError('Failed to capture photo');
       }
     }
   };
 
+  const validateFaceInCircle = async (uri: string): Promise<boolean> => {
+    return true;
+  };
+
   const handleContinue = () => {
     if (capturedImage) {
-      updateProfile({ profilePicture: capturedImage });
+      router.push({
+        pathname: '/profileSetup/UploadPictureScreen',
+        params: { userId, capturedImage }
+      });
     }
-    router.push('/(tabs)');
   };
 
   const handleRetake = () => {
     setCapturedImage(null);
+    setShowPreview(false);
+    setError('');
   };
 
   if (!permission) {
@@ -84,32 +102,34 @@ export default function CameraFaceDetectionScreen() {
     );
   }
 
-  if (capturedImage) {
+  if (showPreview && capturedImage) {
     return (
       <SafeAreaContainer style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <View style={styles.previewHeader}>
+          <TouchableOpacity onPress={handleRetake} style={styles.backButton}>
             <ChevronLeft size={24} color={Colors.text.primary} />
           </TouchableOpacity>
+          <Text style={styles.previewTitle}>Review Photo</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         <View style={styles.previewContainer}>
-          <View style={styles.imagePreview}>
-            <img
-              src={capturedImage}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              alt="Captured"
-            />
+          <View style={styles.previewImageCircle}>
+            <Image source={{ uri: capturedImage }} style={styles.previewImage} />
           </View>
+          <Text style={styles.previewSubtitle}>Are you satisfied with this photo?</Text>
         </View>
 
         <View style={styles.buttonContainer}>
           <Button
-            title="Continue"
+            title="Use This Photo"
             onPress={handleContinue}
             variant="primary"
             size="large"
           />
+          <TouchableOpacity style={styles.retakeButton} onPress={handleRetake}>
+            <Text style={styles.retakeButtonText}>Retake Photo</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaContainer>
     );
@@ -125,35 +145,43 @@ export default function CameraFaceDetectionScreen() {
 
       <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
         <View style={styles.overlay}>
-          <View style={styles.faceFrameContainer}>
-            <Svg
-              width={OVAL_WIDTH}
-              height={OVAL_HEIGHT}
-              viewBox={`0 0 ${OVAL_WIDTH} ${OVAL_HEIGHT}`}
-            >
-              <Defs>
-                <LinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <Stop offset="0%" stopColor="#ff334b" stopOpacity="1" />
-                  <Stop offset="50%" stopColor="#ffeb3b" stopOpacity="1" />
-                  <Stop offset="100%" stopColor="#4caf50" stopOpacity="1" />
-                </LinearGradient>
-              </Defs>
-              <Path
-                d={`M ${OVAL_WIDTH / 2} 0
-                   Q ${OVAL_WIDTH} 0 ${OVAL_WIDTH} ${OVAL_HEIGHT / 2}
-                   Q ${OVAL_WIDTH} ${OVAL_HEIGHT} ${OVAL_WIDTH / 2} ${OVAL_HEIGHT}
-                   Q 0 ${OVAL_HEIGHT} 0 ${OVAL_HEIGHT / 2}
-                   Q 0 0 ${OVAL_WIDTH / 2} 0`}
-                stroke="url(#grad)"
-                strokeWidth="4"
-                fill="none"
-                strokeDasharray="12 8"
-              />
-            </Svg>
+          <View style={styles.topDarkOverlay} />
+
+          <View style={styles.middleRow}>
+            <View style={styles.sideDarkOverlay} />
+            <View style={styles.circleContainer}>
+              <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
+                <Defs>
+                  <LinearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <Stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
+                    <Stop offset="50%" stopColor="#ec4899" stopOpacity="1" />
+                    <Stop offset="100%" stopColor="#f59e0b" stopOpacity="1" />
+                  </LinearGradient>
+                </Defs>
+                <Circle
+                  cx={CIRCLE_SIZE / 2}
+                  cy={CIRCLE_SIZE / 2}
+                  r={CIRCLE_SIZE / 2 - 4}
+                  stroke="url(#circleGrad)"
+                  strokeWidth="4"
+                  fill="none"
+                  strokeDasharray="12 8"
+                />
+              </Svg>
+            </View>
+            <View style={styles.sideDarkOverlay} />
           </View>
 
-          <View style={styles.instructionBox}>
-            <Text style={styles.instructionText}>Keep your phone straight</Text>
+          <View style={styles.bottomDarkOverlay}>
+            {error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : (
+              <View style={styles.instructionBox}>
+                <Text style={styles.instructionText}>Position your face in the circle</Text>
+              </View>
+            )}
           </View>
         </View>
       </CameraView>
@@ -219,20 +247,69 @@ const styles = StyleSheet.create({
     marginBottom: Layout.spacing.md,
   },
 
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Layout.spacing.lg,
+    paddingTop: Layout.spacing.xl,
+    paddingBottom: Layout.spacing.md,
+  },
+
+  previewTitle: {
+    fontSize: Fonts.sizes.xl,
+    fontWeight: Fonts.weights.bold,
+    color: Colors.text.primary,
+  },
+
   previewContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: Layout.spacing.lg,
   },
 
-  imagePreview: {
+  previewImageCircle: {
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    overflow: 'hidden',
+    backgroundColor: Colors.background.secondary,
+    marginBottom: Layout.spacing.xl,
+  },
+
+  previewImage: {
     width: '100%',
     height: '100%',
+  },
+
+  previewSubtitle: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    fontWeight: Fonts.weights.regular,
   },
 
   buttonContainer: {
     paddingHorizontal: Layout.spacing.lg,
     paddingBottom: Layout.spacing.xl,
+    gap: Layout.spacing.md,
+  },
+
+  retakeButton: {
+    height: 56,
+    borderRadius: Layout.borderRadius.xl,
+    borderWidth: 2,
+    borderColor: Colors.primary.purple,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  retakeButtonText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.primary.purple,
   },
 
   cameraContainer: {
@@ -265,20 +342,41 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
+  },
+
+  topDarkOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+
+  middleRow: {
+    flexDirection: 'row',
+    height: CIRCLE_SIZE,
+  },
+
+  sideDarkOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+
+  circleContainer: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  faceFrameContainer: {
+  bottomDarkOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 140,
   },
 
   instructionBox: {
-    position: 'absolute',
-    bottom: 200,
     backgroundColor: Colors.text.primary,
-    paddingHorizontal: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.xl,
     paddingVertical: Layout.spacing.md,
     borderRadius: Layout.borderRadius.lg,
   },
@@ -287,6 +385,19 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.base,
     fontWeight: Fonts.weights.medium,
     color: Colors.background.primary,
+  },
+
+  errorBox: {
+    backgroundColor: '#ff334b',
+    paddingHorizontal: Layout.spacing.xl,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.lg,
+  },
+
+  errorText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text.primary,
   },
 
   captureButtonContainer: {

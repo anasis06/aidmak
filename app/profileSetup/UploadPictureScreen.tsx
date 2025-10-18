@@ -15,9 +15,10 @@ export default function UploadPictureScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const userId = params.userId as string;
+  const capturedImageUri = params.capturedImage as string | undefined;
   const { profileData, updateProfileData, saveProfile, isLoading } = useProfileSetup();
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(capturedImageUri || null);
+  const [showPreview, setShowPreview] = useState(!!capturedImageUri);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -33,23 +34,11 @@ export default function UploadPictureScreen() {
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera permission is required to take photos');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
+  const takePhoto = () => {
+    router.push({
+      pathname: '/profileSetup/CameraFaceDetectionScreen',
+      params: { userId }
     });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-      setShowPreview(true);
-    }
   };
 
   const handleRetake = () => {
