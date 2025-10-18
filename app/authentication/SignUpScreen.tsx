@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
 
   signUpButton: {
-    marginTop: Layout.spacing.xxl + 20,
+    marginTop: Layout.spacing.xxl + 60,
   },
 
   loginSection: {
