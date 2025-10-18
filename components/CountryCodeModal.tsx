@@ -7,6 +7,8 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
@@ -70,12 +72,13 @@ export default function CountryCodeModal({
   return (
     <Modal
       visible={visible}
-      transparent
-      animationType="fade"
+      animationType="slide"
+      presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>Choose your Country</Text>
           </View>
@@ -106,58 +109,43 @@ export default function CountryCodeModal({
             windowSize={10}
           />
 
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.closeButtonText}>Cancel</Text>
-          </TouchableOpacity>
+          <View style={styles.bottomIndicator} />
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  safeArea: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Layout.spacing.xl,
+    backgroundColor: '#000000',
   },
 
-  modalContent: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: Layout.borderRadius.xxl,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '80%',
-    overflow: 'hidden',
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
 
   header: {
-    paddingTop: Layout.spacing.xl,
-    paddingHorizontal: Layout.spacing.xl,
-    paddingBottom: Layout.spacing.lg,
+    paddingVertical: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.lg,
     alignItems: 'center',
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
     textAlign: 'center',
-    lineHeight: 30,
   },
 
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.secondary,
-    borderRadius: Layout.borderRadius.lg,
-    marginHorizontal: Layout.spacing.xl,
+    backgroundColor: '#1C1C1E',
+    borderRadius: 10,
+    marginHorizontal: Layout.spacing.lg,
     marginBottom: Layout.spacing.md,
     paddingHorizontal: Layout.spacing.md,
     height: 44,
@@ -179,8 +167,8 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingHorizontal: Layout.spacing.xl,
-    paddingBottom: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.lg,
+    paddingBottom: Layout.spacing.xl,
   },
 
   countryItem: {
@@ -188,12 +176,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: Layout.spacing.md,
-    paddingHorizontal: Layout.spacing.md,
-    borderRadius: Layout.borderRadius.md,
+    paddingHorizontal: Layout.spacing.sm,
+    borderRadius: 8,
   },
 
   countryItemSelected: {
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: '#1C1C1E',
   },
 
   countryLeft: {
@@ -221,19 +209,12 @@ const styles = StyleSheet.create({
     marginLeft: Layout.spacing.md,
   },
 
-  closeButton: {
-    height: 56,
-    borderRadius: Layout.borderRadius.xl,
-    backgroundColor: Colors.primary.purple,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: Layout.spacing.xl,
-    marginVertical: Layout.spacing.lg,
-  },
-
-  closeButtonText: {
-    fontSize: Fonts.sizes.lg,
-    fontWeight: Fonts.weights.bold,
-    color: Colors.text.primary,
+  bottomIndicator: {
+    height: 5,
+    width: 134,
+    backgroundColor: Colors.text.primary,
+    borderRadius: 100,
+    alignSelf: 'center',
+    marginBottom: Layout.spacing.sm,
   },
 });
