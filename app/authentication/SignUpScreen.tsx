@@ -159,6 +159,7 @@ export default function SignUpScreen() {
                 error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                style={styles.emailField}
               />
 
               <Button
@@ -236,6 +237,10 @@ const styles = StyleSheet.create({
   phoneInput: {
     marginBottom: Layout.spacing.xl,
   },
+
+  emailField: {
+    marginBottom: Layout.spacing.xl
+  }
 
   signUpButton: {
     marginTop: Layout.spacing.xxl + 170,
