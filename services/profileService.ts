@@ -1,5 +1,13 @@
 import { supabase } from './api';
 
+export interface StylePreferences {
+  [key: string]: any;
+}
+
+export interface MeasurementsMetadata {
+  [key: string]: any;
+}
+
 export interface UserProfile {
   id?: string;
   user_id: string;
@@ -8,6 +16,17 @@ export interface UserProfile {
   weight?: number;
   skin_tone?: string;
   profile_picture_url?: string;
+  chest_measurement?: number;
+  waist_measurement?: number;
+  hips_measurement?: number;
+  inseam_measurement?: number;
+  shoe_size?: number;
+  clothing_size?: string;
+  preferred_fit?: string;
+  style_preferences?: StylePreferences;
+  body_type?: string;
+  additional_notes?: string;
+  measurements_metadata?: MeasurementsMetadata;
   created_at?: string;
   updated_at?: string;
 }
@@ -101,5 +120,60 @@ export const profileService = {
     } catch (error) {
       throw new Error(`Failed to upload profile picture: ${error}`);
     }
+  },
+
+  isProfileComplete: async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .rpc('is_profile_complete', { p_user_id: userId });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data || false;
+    } catch (error) {
+      console.error('Error checking profile completeness:', error);
+      return false;
+    }
+  },
+
+  subscribeToProfile: (userId: string, callback: (profile: UserProfile | null) => void) => {
+    const channel = supabase
+      .channel(`profile:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_profiles',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            callback(null);
+          } else {
+            callback(payload.new as UserProfile);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
+  deleteProfile: async (userId: string) => {
+    const { error } = await supabase
+      .from('user_profiles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return true;
   },
 };
