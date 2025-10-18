@@ -5,6 +5,9 @@ interface ProfileSetupData {
   gender?: string;
   height?: number;
   weight?: number;
+  chestMeasurement?: number;
+  waistMeasurement?: number;
+  hipsMeasurement?: number;
   skinTone?: string;
   profilePictureUri?: string;
 }
@@ -44,6 +47,9 @@ export const ProfileSetupProvider: React.FC<{ children: ReactNode }> = ({ childr
         gender: profileData.gender,
         height: profileData.height,
         weight: profileData.weight,
+        chest_measurement: profileData.chestMeasurement,
+        waist_measurement: profileData.waistMeasurement,
+        hips_measurement: profileData.hipsMeasurement,
         skin_tone: profileData.skinTone,
         profile_picture_url: profilePictureUrl,
       };

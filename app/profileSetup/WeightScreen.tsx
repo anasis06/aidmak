@@ -61,7 +61,7 @@ export default function WeightScreen() {
     const weightKg = parseFloat(weightInput);
     updateProfileData({ weight: weightKg });
     router.push({
-      pathname: '/profileSetup/SkinToneScreen',
+      pathname: '/profileSetup/BodyMeasurementsScreen',
       params: { userId }
     });
   };
@@ -78,7 +78,7 @@ export default function WeightScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={3} total={7} />
+        <ProgressBar progress={3} total={8} />
       </View>
 
       <View style={styles.container}>

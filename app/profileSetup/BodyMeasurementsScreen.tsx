@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 interface Measurements {
   chest: string;
@@ -27,7 +27,9 @@ const MAX_MEASUREMENT = 200;
 
 export default function BodyMeasurementsScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { updateProfileData } = useProfileSetup();
   const [measurements, setMeasurements] = useState<Measurements>({
     chest: '',
     waist: '',
@@ -41,14 +43,15 @@ export default function BodyMeasurementsScreen() {
   });
 
   const handleContinue = () => {
-    updateProfile({
-      bodyMeasurements: {
-        chest: parseFloat(measurements.chest) || 0,
-        waist: parseFloat(measurements.waist) || 0,
-        hips: parseFloat(measurements.hips) || 0,
-      },
+    updateProfileData({
+      chestMeasurement: parseFloat(measurements.chest),
+      waistMeasurement: parseFloat(measurements.waist),
+      hipsMeasurement: parseFloat(measurements.hips),
     });
-    router.push('/profileSetup/SkinToneScreen');
+    router.push({
+      pathname: '/profileSetup/SkinToneScreen',
+      params: { userId }
+    });
   };
 
   const validateMeasurement = (field: keyof Measurements, value: string): string => {
@@ -102,7 +105,7 @@ export default function BodyMeasurementsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={4} total={7} />
+        <ProgressBar progress={4} total={8} />
       </View>
 
       <View style={styles.container}>
