@@ -252,18 +252,17 @@ export default function OtpVerificationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: Layout.spacing.xl,
   },
 
   modalContainer: {
     backgroundColor: Colors.background.primary,
     borderRadius: Layout.borderRadius.xxl,
-    paddingTop: Layout.spacing.xl,
-    paddingHorizontal: Layout.spacing.xl,
-    paddingBottom: Layout.spacing.xxl,
-    width: '90%',
+    padding: Layout.spacing.xxl,
+    width: '100%',
     maxWidth: 400,
   },
 
@@ -278,11 +277,12 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: Fonts.sizes.xxl,
+    fontSize: 22,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: Layout.spacing.md,
+    lineHeight: 30,
   },
 
   subtitle: {
