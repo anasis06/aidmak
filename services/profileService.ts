@@ -98,11 +98,11 @@ export const profileService = {
       const arrayBuffer = await new Response(blob).arrayBuffer();
 
       const fileExt = fileUri.split('.').pop() || 'jpg';
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-pictures/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('profile-pictures')
         .upload(filePath, arrayBuffer, {
           contentType: `image/${fileExt}`,
           upsert: true,
@@ -113,7 +113,7 @@ export const profileService = {
       }
 
       const { data } = supabase.storage
-        .from('avatars')
+        .from('profile-pictures')
         .getPublicUrl(filePath);
 
       return data.publicUrl;
