@@ -63,17 +63,7 @@ export default function UploadPictureScreen() {
     try {
       updateProfileData({ profilePictureUri: imageUri });
       await saveProfile(userId);
-
-      Alert.alert(
-        'Profile Complete',
-        'Your profile has been saved successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)')
-          }
-        ]
-      );
+      router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to save profile');
     }
