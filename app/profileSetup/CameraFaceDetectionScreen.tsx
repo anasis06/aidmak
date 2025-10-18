@@ -8,10 +8,11 @@ import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Ellipse, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CIRCLE_SIZE = SCREEN_WIDTH * 0.75;
+const OVAL_WIDTH = SCREEN_WIDTH * 0.65;
+const OVAL_HEIGHT = SCREEN_HEIGHT * 0.55;
 
 export default function CameraFaceDetectionScreen() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function CameraFaceDetectionScreen() {
             setCapturedImage(photo.uri);
             setShowPreview(true);
           } else {
-            setError('Keep your face in the circle');
+            setError('Your face is not detected');
             setTimeout(() => setError(''), 3000);
           }
         }
@@ -145,52 +146,50 @@ export default function CameraFaceDetectionScreen() {
 
       <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
         <View style={styles.overlay}>
-          <View style={styles.topDarkOverlay} />
-
-          <View style={styles.middleRow}>
-            <View style={styles.sideDarkOverlay} />
-            <View style={styles.circleContainer}>
-              <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
-                <Defs>
-                  <LinearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <Stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
-                    <Stop offset="50%" stopColor="#ec4899" stopOpacity="1" />
-                    <Stop offset="100%" stopColor="#f59e0b" stopOpacity="1" />
-                  </LinearGradient>
-                </Defs>
-                <Circle
-                  cx={CIRCLE_SIZE / 2}
-                  cy={CIRCLE_SIZE / 2}
-                  r={CIRCLE_SIZE / 2 - 4}
-                  stroke="url(#circleGrad)"
-                  strokeWidth="4"
-                  fill="none"
-                  strokeDasharray="12 8"
-                />
-              </Svg>
-            </View>
-            <View style={styles.sideDarkOverlay} />
-          </View>
-
-          <View style={styles.bottomDarkOverlay}>
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : (
-              <View style={styles.instructionBox}>
-                <Text style={styles.instructionText}>Position your face in the circle</Text>
-              </View>
-            )}
+          <View style={styles.ovalContainer}>
+            <Svg width={OVAL_WIDTH} height={OVAL_HEIGHT} style={styles.ovalSvg}>
+              <Defs>
+                <LinearGradient id="ovalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <Stop offset="0%" stopColor="#ff6b6b" stopOpacity="1" />
+                  <Stop offset="25%" stopColor="#feca57" stopOpacity="1" />
+                  <Stop offset="50%" stopColor="#48dbfb" stopOpacity="1" />
+                  <Stop offset="75%" stopColor="#1dd1a1" stopOpacity="1" />
+                  <Stop offset="100%" stopColor="#5f27cd" stopOpacity="1" />
+                </LinearGradient>
+              </Defs>
+              <Ellipse
+                cx={OVAL_WIDTH / 2}
+                cy={OVAL_HEIGHT / 2}
+                rx={OVAL_WIDTH / 2 - 6}
+                ry={OVAL_HEIGHT / 2 - 6}
+                stroke="url(#ovalGrad)"
+                strokeWidth="6"
+                fill="none"
+                strokeDasharray="15 10"
+              />
+            </Svg>
           </View>
         </View>
       </CameraView>
 
-      <View style={styles.captureButtonContainer}>
+      <View style={styles.bottomSection}>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : (
+          <View style={styles.instructionBox}>
+            <View style={styles.iconContainer}>
+              <View style={styles.phoneIcon} />
+            </View>
+            <Text style={styles.instructionText}>Keep your phone straight</Text>
+          </View>
+        )}
+
         <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
           <View style={styles.captureButtonInner} />
         </TouchableOpacity>
-        <Text style={styles.captureText}>Take a selfie</Text>
+        <Text style={styles.captureText}>Take a selfi</Text>
       </View>
     </View>
   );
@@ -342,56 +341,67 @@ const styles = StyleSheet.create({
 
   overlay: {
     flex: 1,
-  },
-
-  topDarkOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-
-  middleRow: {
-    flexDirection: 'row',
-    height: CIRCLE_SIZE,
-  },
-
-  sideDarkOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-
-  circleContainer: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  bottomDarkOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  ovalContainer: {
+    width: OVAL_WIDTH,
+    height: OVAL_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 140,
+  },
+
+  ovalSvg: {
+    position: 'absolute',
+  },
+
+  bottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 40 : 30,
+    gap: Layout.spacing.lg,
   },
 
   instructionBox: {
-    backgroundColor: Colors.text.primary,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingHorizontal: Layout.spacing.xl,
     paddingVertical: Layout.spacing.md,
-    borderRadius: Layout.borderRadius.lg,
+    borderRadius: Layout.borderRadius.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+  },
+
+  iconContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  phoneIcon: {
+    width: 16,
+    height: 24,
+    borderWidth: 2,
+    borderColor: Colors.text.primary,
+    borderRadius: 3,
   },
 
   instructionText: {
     fontSize: Fonts.sizes.base,
-    fontWeight: Fonts.weights.medium,
-    color: Colors.background.primary,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text.primary,
   },
 
   errorBox: {
     backgroundColor: '#ff334b',
     paddingHorizontal: Layout.spacing.xl,
     paddingVertical: Layout.spacing.md,
-    borderRadius: Layout.borderRadius.lg,
+    borderRadius: Layout.borderRadius.xl,
   },
 
   errorText: {
@@ -400,36 +410,27 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  captureButtonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    gap: Layout.spacing.md,
-  },
-
   captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: Colors.primary.purple,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: Colors.text.primary,
+    borderWidth: 5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
 
   captureButtonInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: Colors.primary.purple,
   },
 
   captureText: {
     fontSize: Fonts.sizes.lg,
-    fontWeight: Fonts.weights.semibold,
+    fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
   },
 });

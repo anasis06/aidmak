@@ -6,6 +6,7 @@ import { ChevronLeft, Camera } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
+import { PhotoLibraryModal } from '@/components/PhotoLibraryModal';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -19,8 +20,21 @@ export default function UploadPictureScreen() {
   const { profileData, updateProfileData, saveProfile, isLoading } = useProfileSetup();
   const [imageUri, setImageUri] = useState<string | null>(capturedImageUri || null);
   const [showPreview, setShowPreview] = useState(!!capturedImageUri);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  const validateFaceInImage = async (uri: string): Promise<boolean> => {
+    return true;
+  };
+
+  const handleLibraryRequest = () => {
+    setShowLibraryModal(true);
+  };
 
   const pickImage = async () => {
+    setShowLibraryModal(false);
+    setError('');
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -29,8 +43,16 @@ export default function UploadPictureScreen() {
     });
 
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-      setShowPreview(true);
+      const imageUri = result.assets[0].uri;
+      const hasFace = await validateFaceInImage(imageUri);
+
+      if (hasFace) {
+        setImageUri(imageUri);
+        setShowPreview(true);
+      } else {
+        setError('Your face is not detected');
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
@@ -60,6 +82,12 @@ export default function UploadPictureScreen() {
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
+      <PhotoLibraryModal
+        visible={showLibraryModal}
+        onAllow={pickImage}
+        onCancel={() => setShowLibraryModal(false)}
+      />
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
@@ -83,6 +111,12 @@ export default function UploadPictureScreen() {
                 <Text style={styles.subtitle}>
                   We'll do this by analyzing your complexion and facial features
                 </Text>
+
+                {error && (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -93,7 +127,7 @@ export default function UploadPictureScreen() {
                 variant="primary"
                 size="large"
               />
-              <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
+              <TouchableOpacity style={styles.secondaryButton} onPress={handleLibraryRequest}>
                 <Text style={styles.secondaryButtonText}>Choose from Library</Text>
               </TouchableOpacity>
             </View>
@@ -216,6 +250,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: Layout.spacing.xl,
     lineHeight: 22,
+  },
+
+  errorBox: {
+    backgroundColor: '#ff334b',
+    paddingHorizontal: Layout.spacing.xl,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.xl,
+    marginTop: Layout.spacing.lg,
+  },
+
+  errorText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text.primary,
+    textAlign: 'center',
   },
 
   buttonContainer: {
