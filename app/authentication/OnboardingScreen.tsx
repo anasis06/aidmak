@@ -89,7 +89,7 @@ export default function OnboardingScreen() {
         >
           <Text style={styles.title}>Where style meets{'\n'}intelligent simplicity</Text>
           <Text style={styles.subtitle}>
-            Integrating trends, preferences, and smart{'\n'}wardrobe tools to inspire your daily looks
+            Integrating trends, preferences hello, and smart{'\n'}wardrobe tools to inspire your daily looks
           </Text>
         </Animated.View>
 
