@@ -102,7 +102,10 @@ export default function SignUpScreen() {
         [
           {
             text: 'OK',
-            onPress: () => router.push('/profileSetup/LetsStartScreen')
+            onPress: () => router.push({
+              pathname: '/profileSetup/LetsStartScreen',
+              params: { userId: currentUserId }
+            })
           }
         ]
       );

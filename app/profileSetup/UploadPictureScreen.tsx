@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Camera } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -9,12 +9,15 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 export default function UploadPictureScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { profileData, updateProfileData, saveProfile, isLoading } = useProfileSetup();
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -26,18 +29,54 @@ export default function UploadPictureScreen() {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setShowPreview(true);
     }
   };
 
-  const takePhoto = () => {
-    router.push('/profileSetup/CameraFaceDetectionScreen');
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera permission is required to take photos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+      setShowPreview(true);
+    }
   };
 
-  const handleContinue = () => {
-    if (imageUri) {
-      updateProfile({ profilePicture: imageUri });
+  const handleRetake = () => {
+    setImageUri(null);
+    setShowPreview(false);
+  };
+
+  const handleContinue = async () => {
+    if (!imageUri || !userId) return;
+
+    try {
+      updateProfileData({ profilePictureUri: imageUri });
+      await saveProfile(userId);
+
+      Alert.alert(
+        'Profile Complete',
+        'Your profile has been saved successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)')
+          }
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save profile');
     }
-    router.push('/(tabs)');
   };
 
   return (
@@ -50,45 +89,76 @@ export default function UploadPictureScreen() {
       </View>
 
       <View style={styles.container}>
-        <View style={styles.contentSection}>
-          <Text style={styles.title}>Upload Your Picture</Text>
+        {!showPreview ? (
+          <>
+            <View style={styles.contentSection}>
+              <Text style={styles.title}>Upload Your Picture</Text>
 
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarCircle}>
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Camera size={48} color={Colors.text.secondary} strokeWidth={1.5} />
+              <View style={styles.avatarSection}>
+                <View style={styles.avatarCircle}>
+                  <View style={styles.avatarPlaceholder}>
+                    <Camera size={48} color={Colors.text.secondary} strokeWidth={1.5} />
+                  </View>
                 </View>
-              )}
+
+                <Text style={styles.subtitle}>
+                  We'll do this by analyzing your complexion and facial features
+                </Text>
+              </View>
             </View>
 
-            <Text style={styles.subtitle}>
-              We'll do this by analyzing your complexion and facial features
-            </Text>
-          </View>
-        </View>
+            <View style={styles.buttonContainer}>
+              <Button
+                title="Take Photo"
+                onPress={takePhoto}
+                variant="primary"
+                size="large"
+              />
+              <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
+                <Text style={styles.secondaryButtonText}>Choose from Library</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.contentSection}>
+              <Text style={styles.title}>Review Your Picture</Text>
 
-        <View style={styles.buttonContainer}>
-          <Button
-            title="Take Photo"
-            onPress={takePhoto}
-            variant="primary"
-            size="large"
-          />
-          <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
-            <Text style={styles.secondaryButtonText}>Choose from Library</Text>
-          </TouchableOpacity>
-          {imageUri && (
-            <Button
-              title="Continue"
-              onPress={handleContinue}
-              variant="primary"
-              size="large"
-            />
-          )}
-        </View>
+              <View style={styles.avatarSection}>
+                <View style={styles.avatarCircle}>
+                  {imageUri && (
+                    <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+                  )}
+                </View>
+
+                <Text style={styles.subtitle}>
+                  Are you satisfied with this photo?
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={Colors.primary.purple} />
+                  <Text style={styles.loadingText}>Saving your profile...</Text>
+                </View>
+              ) : (
+                <>
+                  <Button
+                    title="Continue"
+                    onPress={handleContinue}
+                    variant="primary"
+                    size="large"
+                  />
+                  <TouchableOpacity style={styles.secondaryButton} onPress={handleRetake}>
+                    <Text style={styles.secondaryButtonText}>Retake Photo</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaContainer>
   );
@@ -188,5 +258,17 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.base,
     fontWeight: Fonts.weights.semibold,
     color: Colors.primary.purple,
+  },
+
+  loadingContainer: {
+    paddingVertical: Layout.spacing.xl,
+    alignItems: 'center',
+    gap: Layout.spacing.md,
+  },
+
+  loadingText: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.text.secondary,
+    fontWeight: Fonts.weights.medium,
   },
 });

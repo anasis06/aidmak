@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 type Unit = 'CM' | 'FT';
 
@@ -17,7 +17,9 @@ const CM_MAX = 250;
 
 export default function HeightScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { updateProfileData } = useProfileSetup();
   const [unit, setUnit] = useState<Unit>('CM');
   const [heightInput, setHeightInput] = useState('');
   const [error, setError] = useState('');
@@ -57,8 +59,11 @@ export default function HeightScreen() {
 
   const handleContinue = () => {
     const heightCm = parseFloat(heightInput);
-    updateProfile({ height: heightCm });
-    router.push('/profileSetup/WeightScreen');
+    updateProfileData({ height: heightCm });
+    router.push({
+      pathname: '/profileSetup/WeightScreen',
+      params: { userId }
+    });
   };
 
   const handleUnitChange = (newUnit: Unit) => {

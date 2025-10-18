@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
@@ -8,17 +8,22 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 export default function GenderChooseScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { updateProfileData } = useProfileSetup();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female' | 'other' | null>(null);
 
   const handleContinue = () => {
     if (selectedGender) {
-      updateProfile({ gender: selectedGender });
-      router.push('/profileSetup/HeightScreen');
+      updateProfileData({ gender: selectedGender });
+      router.push({
+        pathname: '/profileSetup/HeightScreen',
+        params: { userId }
+      });
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 type Unit = 'KG' | 'LB';
 
@@ -17,7 +17,9 @@ const KG_MAX = 300;
 
 export default function WeightScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { updateProfileData } = useProfileSetup();
   const [unit, setUnit] = useState<Unit>('KG');
   const [weightInput, setWeightInput] = useState('');
   const [error, setError] = useState('');
@@ -57,8 +59,11 @@ export default function WeightScreen() {
 
   const handleContinue = () => {
     const weightKg = parseFloat(weightInput);
-    updateProfile({ weight: weightKg });
-    router.push('/profileSetup/BodyMeasurementsScreen');
+    updateProfileData({ weight: weightKg });
+    router.push({
+      pathname: '/profileSetup/SkinToneScreen',
+      params: { userId }
+    });
   };
 
   const handleUnitChange = (newUnit: Unit) => {

@@ -25,14 +25,15 @@ export default function OtpVerificationModal({
 }: OtpVerificationModalProps) {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [error, setError] = useState('');
-  const [timer, setTimer] = useState(32);
+  const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   useEffect(() => {
     if (visible) {
-      setTimer(32);
+      setTimer(30);
       setCanResend(false);
       setOtp(['', '', '', '']);
       setError('');
@@ -134,19 +135,20 @@ export default function OtpVerificationModal({
   const isOtpComplete = otp.every(digit => digit !== '');
 
   const handleResend = async () => {
-    if (!canResend) return;
+    if (!canResend || isResending) return;
 
+    setIsResending(true);
     try {
       const response = await sendOTP(phoneNumber, countryCode);
 
       if (response.success) {
         if (response.otpForTesting) {
-          console.log('OTP for testing:', response.otpForTesting);
+          console.log('New OTP for testing:', response.otpForTesting);
         }
         Alert.alert('OTP Resent', 'A new OTP has been sent to your phone number');
         setOtp(['', '', '', '']);
         setError('');
-        setTimer(32);
+        setTimer(30);
         setCanResend(false);
         inputRefs.current[0]?.focus();
       } else {
@@ -154,6 +156,8 @@ export default function OtpVerificationModal({
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to resend OTP');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -209,12 +213,24 @@ export default function OtpVerificationModal({
             {error && !isValidating ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <View style={styles.resendSection}>
-              <Text style={styles.resendText}>
-                Resend code in{' '}
-                <Text style={styles.timerText}>
-                  {timer} seconds.
+              {!canResend ? (
+                <Text style={styles.resendText}>
+                  Resend code in{' '}
+                  <Text style={styles.timerText}>
+                    {timer} seconds
+                  </Text>
                 </Text>
-              </Text>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleResend}
+                  disabled={isResending}
+                  style={styles.resendButton}
+                >
+                  <Text style={styles.resendButtonText}>
+                    {isResending ? 'Resending...' : 'Resend OTP'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <Button
@@ -342,6 +358,17 @@ const styles = StyleSheet.create({
 
   timerText: {
     color: Colors.text.primary,
+    fontWeight: Fonts.weights.semibold,
+  },
+
+  resendButton: {
+    paddingVertical: Layout.spacing.xs,
+    paddingHorizontal: Layout.spacing.md,
+  },
+
+  resendButtonText: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.primary.purple,
     fontWeight: Fonts.weights.semibold,
   },
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
@@ -11,9 +11,14 @@ const { width, height } = Dimensions.get('window');
 
 export default function LetsStartScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
 
   const handleNext = () => {
-    router.push('/profileSetup/GenderChooseScreen');
+    router.push({
+      pathname: '/profileSetup/GenderChooseScreen',
+      params: { userId }
+    });
   };
 
   return (

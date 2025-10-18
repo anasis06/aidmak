@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
-import { useUser } from '@/hooks/useUser';
+import { useProfileSetup } from '@/context/ProfileSetupContext';
 
 type SkinTone = 'fair' | 'medium' | 'dusky' | 'dark';
 
@@ -43,13 +43,18 @@ const skinToneOptions: SkinToneOption[] = [
 
 export default function SkinToneScreen() {
   const router = useRouter();
-  const { updateProfile } = useUser();
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const { updateProfileData } = useProfileSetup();
   const [selectedTone, setSelectedTone] = useState<SkinTone | null>(null);
 
   const handleContinue = () => {
     if (selectedTone) {
-      updateProfile({ skinTone: selectedTone });
-      router.push('/profileSetup/UploadPictureScreen');
+      updateProfileData({ skinTone: selectedTone });
+      router.push({
+        pathname: '/profileSetup/UploadPictureScreen',
+        params: { userId }
+      });
     }
   };
 
