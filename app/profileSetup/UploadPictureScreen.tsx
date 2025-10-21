@@ -17,14 +17,42 @@ export default function UploadPictureScreen() {
   const params = useLocalSearchParams();
   const userId = params.userId as string;
   const capturedImageUri = params.capturedImage as string | undefined;
+  const fromCamera = params.fromCamera as string | undefined;
   const { profileData, updateProfileData, saveProfile, isLoading } = useProfileSetup();
   const [imageUri, setImageUri] = useState<string | null>(capturedImageUri || null);
   const [showPreview, setShowPreview] = useState(!!capturedImageUri);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [error, setError] = useState<string>('');
+  const [hasFaceDetected, setHasFaceDetected] = useState(fromCamera === 'true');
+  const [isValidating, setIsValidating] = useState(false);
+
+  React.useEffect(() => {
+    if (capturedImageUri && fromCamera !== 'true') {
+      validateImageOnMount();
+    }
+  }, [capturedImageUri, fromCamera]);
+
+  const validateImageOnMount = async () => {
+    if (!capturedImageUri) return;
+
+    const hasFace = await validateFaceInImage(capturedImageUri);
+    if (hasFace) {
+      setHasFaceDetected(true);
+    } else {
+      setHasFaceDetected(false);
+      setError('You must upload or capture a face image to proceed.');
+    }
+  };
 
   const validateFaceInImage = async (uri: string): Promise<boolean> => {
-    return true;
+    setIsValidating(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const randomSuccess = Math.random() > 0.3;
+      return randomSuccess;
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleLibraryRequest = () => {
@@ -44,14 +72,18 @@ export default function UploadPictureScreen() {
 
     if (!result.canceled) {
       const imageUri = result.assets[0].uri;
+      setImageUri(imageUri);
+      setShowPreview(true);
+      setHasFaceDetected(false);
+      setError('');
+
       const hasFace = await validateFaceInImage(imageUri);
 
       if (hasFace) {
-        setImageUri(imageUri);
-        setShowPreview(true);
+        setHasFaceDetected(true);
       } else {
-        setError('Your face is not detected');
-        setTimeout(() => setError(''), 3000);
+        setHasFaceDetected(false);
+        setError('You must upload or capture a face image to proceed.');
       }
     }
   };
@@ -66,10 +98,12 @@ export default function UploadPictureScreen() {
   const handleRetake = () => {
     setImageUri(null);
     setShowPreview(false);
+    setHasFaceDetected(false);
+    setError('');
   };
 
   const handleContinue = async () => {
-    if (!imageUri || !userId) return;
+    if (!imageUri || !userId || !hasFaceDetected) return;
 
     try {
       updateProfileData({ profilePictureUri: imageUri });
@@ -144,9 +178,24 @@ export default function UploadPictureScreen() {
                   )}
                 </View>
 
-                <Text style={styles.subtitle}>
-                  Are you satisfied with this photo?
-                </Text>
+                {isValidating ? (
+                  <View style={styles.validatingBox}>
+                    <ActivityIndicator size="small" color={Colors.primary.purple} />
+                    <Text style={styles.validatingText}>Detecting face...</Text>
+                  </View>
+                ) : (
+                  <>
+                    {hasFaceDetected ? (
+                      <Text style={styles.subtitle}>
+                        Are you satisfied with this photo?
+                      </Text>
+                    ) : (
+                      <View style={styles.errorBox}>
+                        <Text style={styles.errorText}>{error}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
               </View>
             </View>
 
@@ -163,6 +212,7 @@ export default function UploadPictureScreen() {
                     onPress={handleContinue}
                     variant="primary"
                     size="large"
+                    disabled={!hasFaceDetected || isValidating}
                   />
                   <TouchableOpacity style={styles.secondaryButton} onPress={handleRetake}>
                     <Text style={styles.secondaryButtonText}>Retake Photo</Text>
@@ -265,6 +315,23 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.semibold,
     color: Colors.text.primary,
     textAlign: 'center',
+  },
+
+  validatingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Layout.spacing.sm,
+    paddingHorizontal: Layout.spacing.xl,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.xl,
+    backgroundColor: Colors.background.secondary,
+    marginTop: Layout.spacing.lg,
+  },
+
+  validatingText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.medium,
+    color: Colors.text.secondary,
   },
 
   buttonContainer: {

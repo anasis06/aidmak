@@ -63,7 +63,7 @@ export default function CameraFaceDetectionScreen() {
     if (capturedImage) {
       router.push({
         pathname: '/profileSetup/UploadPictureScreen',
-        params: { userId, capturedImage }
+        params: { userId, capturedImage, fromCamera: 'true' }
       });
     }
   };
