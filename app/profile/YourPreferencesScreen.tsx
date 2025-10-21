@@ -24,30 +24,57 @@ export default function YourPreferencesScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading) {
-      loadProfile();
+    if (authLoading) {
+      return;
     }
-  }, [authLoading, user]);
 
-  const loadProfile = async () => {
     if (!user?.id) {
       setError('No user found. Please log in.');
       setLoading(false);
       return;
     }
 
+    loadProfile();
+  }, [authLoading, user?.id]);
+
+  const loadProfile = async () => {
+    if (!user?.id) {
+      console.log('No user ID available');
+      setError('No user found. Please log in.');
+      setLoading(false);
+      return;
+    }
+
+    console.log('Loading profile for user:', user.id);
+    setLoading(true);
+    setError(null);
+
     try {
-      setError(null);
       const profile = await profileService.getProfile(user.id);
+      console.log('Profile loaded:', profile);
+
       if (!profile) {
+        console.log('No profile found for user');
         setError('Profile not found. Please complete your profile setup.');
+        setProfileData(null);
+      } else {
+        setProfileData(profile);
       }
-      setProfileData(profile);
     } catch (error) {
       console.error('Error loading profile:', error);
       setError('Failed to load profile. Please try again.');
+      setProfileData(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    console.log('Retry button pressed, authLoading:', authLoading, 'user:', user?.id);
+    if (!authLoading && user?.id) {
+      loadProfile();
+    } else if (!user?.id) {
+      router.replace('/authentication/LoginScreen');
     }
   };
 
@@ -155,8 +182,10 @@ export default function YourPreferencesScreen() {
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+            <Text style={styles.retryButtonText}>
+              {!user?.id ? 'Go to Login' : 'Retry'}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaContainer>

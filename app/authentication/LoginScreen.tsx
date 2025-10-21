@@ -11,9 +11,11 @@ import { validatePhoneNumber } from '@/utils/validators';
 import OtpVerificationModal from './OtpVerificationModal';
 import { sendOTP } from '@/services/otpService';
 import { userService } from '@/services/userService';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { setCustomUser } = useAuth();
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
@@ -63,6 +65,14 @@ export default function LoginScreen() {
 
   const handleVerifyOTP = async (otp: string) => {
     try {
+      if (currentUser) {
+        setCustomUser({
+          id: currentUser.id,
+          email: currentUser.email,
+          phone: `${countryCode}${phoneNumber}`,
+        });
+      }
+
       Alert.alert(
         'Success',
         'Logged in successfully!',

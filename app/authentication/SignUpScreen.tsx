@@ -16,7 +16,7 @@ import { userService } from '@/services/userService';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, setCustomUser } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -92,6 +92,12 @@ export default function SignUpScreen() {
     try {
       if (currentUserId) {
         await userService.verifyUser(currentUserId);
+
+        setCustomUser({
+          id: currentUserId,
+          email: email,
+          phone: `${countryCode}${phoneNumber}`,
+        });
       }
 
       setShowOtpModal(false);
