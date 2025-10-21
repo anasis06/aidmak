@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Colors } from '@/constants/Colors';
@@ -36,6 +36,14 @@ export default function YourPreferencesScreen() {
 
     loadProfile();
   }, [authLoading, user?.id]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!authLoading && user?.id) {
+        loadProfile();
+      }
+    }, [authLoading, user?.id])
+  );
 
   const loadProfile = async () => {
     if (!user?.id) {
