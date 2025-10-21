@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { ChevronRight, Bell } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { CircularProgress } from '@/components/CircularProgress';
+import RateUsModal from '@/components/RateUsModal';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(80);
+  const [showRateUsModal, setShowRateUsModal] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -73,7 +75,12 @@ export default function ProfileScreen() {
   };
 
   const handleRateUs = () => {
-    Alert.alert('Rate Us', 'Thank you for your feedback!');
+    setShowRateUsModal(true);
+  };
+
+  const handleRateUsSubmit = (rating: number) => {
+    console.log('User rating:', rating);
+    Alert.alert('Thank you!', `You rated us ${rating} star${rating !== 1 ? 's' : ''}!`);
   };
 
   const handleLogout = () => {
@@ -129,6 +136,12 @@ export default function ProfileScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      <RateUsModal
+        visible={showRateUsModal}
+        onClose={() => setShowRateUsModal(false)}
+        onSubmit={handleRateUsSubmit}
+      />
     </SafeAreaContainer>
   );
 }
