@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
 import { useProfileSetup } from '@/context/ProfileSetupContext';
+import { profileService } from '@/services/profileService';
 
 type SkinTone = 'fair' | 'medium' | 'dusky' | 'dark';
 
@@ -45,11 +46,45 @@ export default function SkinToneScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const userId = params.userId as string;
+  const fromPreferences = params.fromPreferences as string;
   const { updateProfileData } = useProfileSetup();
   const [selectedTone, setSelectedTone] = useState<SkinTone | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(fromPreferences === 'true');
 
-  const handleContinue = () => {
-    if (selectedTone) {
+  useEffect(() => {
+    if (fromPreferences === 'true') {
+      loadExistingSkinTone();
+    }
+  }, []);
+
+  const loadExistingSkinTone = async () => {
+    try {
+      const profile = await profileService.getProfile(userId);
+      if (profile?.skin_tone) {
+        setSelectedTone(profile.skin_tone as SkinTone);
+      }
+    } catch (error) {
+      console.error('Error loading skin tone:', error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!selectedTone) return;
+
+    if (fromPreferences === 'true') {
+      setLoading(true);
+      try {
+        await profileService.updateProfile(userId, { skin_tone: selectedTone });
+        router.back();
+      } catch (error) {
+        console.error('Error updating skin tone:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
       updateProfileData({ skinTone: selectedTone });
       router.push({
         pathname: '/profileSetup/UploadPictureScreen',
@@ -58,13 +93,23 @@ export default function SkinToneScreen() {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <SafeAreaContainer style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary.purple} />
+        </View>
+      </SafeAreaContainer>
+    );
+  }
+
   return (
     <SafeAreaContainer style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <ProgressBar progress={5} total={8} />
+        {fromPreferences !== 'true' && <ProgressBar progress={5} total={8} />}
       </View>
 
       <View style={styles.container}>
@@ -90,13 +135,19 @@ export default function SkinToneScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button
-            title="Next"
-            onPress={handleContinue}
-            variant="primary"
-            size="large"
-            disabled={!selectedTone}
-          />
+          {loading ? (
+            <View style={styles.buttonLoading}>
+              <ActivityIndicator size="small" color={Colors.primary.purple} />
+            </View>
+          ) : (
+            <Button
+              title={fromPreferences === 'true' ? 'Save' : 'Next'}
+              onPress={handleContinue}
+              variant="primary"
+              size="large"
+              disabled={!selectedTone}
+            />
+          )}
         </View>
       </View>
     </SafeAreaContainer>
@@ -196,5 +247,19 @@ const styles = StyleSheet.create({
 
   buttonContainer: {
     paddingBottom: Layout.spacing.xl,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  buttonLoading: {
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Layout.borderRadius.xl,
   },
 });
