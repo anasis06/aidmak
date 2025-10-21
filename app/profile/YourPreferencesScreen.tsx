@@ -18,22 +18,34 @@ import { profileService } from '@/services/profileService';
 
 export default function YourPreferencesScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (!authLoading) {
+      loadProfile();
+    }
+  }, [authLoading, user]);
 
   const loadProfile = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setError('No user found. Please log in.');
+      setLoading(false);
+      return;
+    }
 
     try {
+      setError(null);
       const profile = await profileService.getProfile(user.id);
+      if (!profile) {
+        setError('Profile not found. Please complete your profile setup.');
+      }
       setProfileData(profile);
     } catch (error) {
       console.error('Error loading profile:', error);
+      setError('Failed to load profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -120,11 +132,32 @@ export default function YourPreferencesScreen() {
     return gender.charAt(0).toUpperCase() + gender.slice(1);
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <SafeAreaContainer style={styles.safeArea}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary.purple} />
+          <Text style={styles.loadingText}>Loading preferences...</Text>
+        </View>
+      </SafeAreaContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaContainer style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ChevronLeft size={24} color={Colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Your Preferences</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaContainer>
     );
@@ -234,6 +267,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: Layout.spacing.md,
+  },
+
+  loadingText: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.text.secondary,
+    marginTop: Layout.spacing.sm,
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Layout.spacing.xl,
+    gap: Layout.spacing.lg,
+  },
+
+  errorText: {
+    fontSize: Fonts.sizes.base,
+    color: Colors.status.error,
+    textAlign: 'center',
+  },
+
+  retryButton: {
+    backgroundColor: Colors.primary.purple,
+    paddingHorizontal: Layout.spacing.xl,
+    paddingVertical: Layout.spacing.md,
+    borderRadius: Layout.borderRadius.lg,
+  },
+
+  retryButtonText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.text.primary,
   },
 
   header: {
