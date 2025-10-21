@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
+import { HorizontalRuler } from '@/components/HorizontalRuler';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -14,6 +15,16 @@ type Unit = 'KG' | 'LB';
 
 const KG_MIN = 20;
 const KG_MAX = 300;
+const LB_MIN = 44;
+const LB_MAX = 660;
+
+const kgToLb = (kg: number): number => {
+  return Math.round(kg * 2.20462);
+};
+
+const lbToKg = (lb: number): number => {
+  return Math.round(lb / 2.20462);
+};
 
 export default function WeightScreen() {
   const router = useRouter();
@@ -21,48 +32,28 @@ export default function WeightScreen() {
   const userId = params.userId as string;
   const { updateProfileData } = useProfileSetup();
   const [unit, setUnit] = useState<Unit>('KG');
-  const [weightInput, setWeightInput] = useState('');
-  const [error, setError] = useState('');
+  const [weightKg, setWeightKg] = useState(50);
+  const [weightLb, setWeightLb] = useState(110);
 
-  const validateWeight = (value: string): boolean => {
-    if (!value) {
-      setError('');
-      return false;
+  useEffect(() => {
+    updateProfileData({ weight: weightKg });
+  }, [weightKg]);
+
+  const handleWeightChange = (value: number) => {
+    if (unit === 'KG') {
+      setWeightKg(value);
+      setWeightLb(kgToLb(value));
+    } else {
+      setWeightLb(value);
+      setWeightKg(lbToKg(value));
     }
-
-    const numValue = parseFloat(value);
-
-    if (isNaN(numValue)) {
-      setError('Please enter a valid number');
-      return false;
-    }
-
-    if (numValue < KG_MIN) {
-      setError(`Weight must be at least ${KG_MIN}kg`);
-      return false;
-    }
-
-    if (numValue > KG_MAX) {
-      setError(`Weight must be less than ${KG_MAX}kg`);
-      return false;
-    }
-
-    setError('');
-    return true;
-  };
-
-  const handleWeightChange = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
-    setWeightInput(numericValue);
-    validateWeight(numericValue);
   };
 
   const handleContinue = () => {
-    const weightKg = parseFloat(weightInput);
     updateProfileData({ weight: weightKg });
     router.push({
       pathname: '/profileSetup/BodyMeasurementsScreen',
-      params: { userId }
+      params: { userId },
     });
   };
 
@@ -70,7 +61,8 @@ export default function WeightScreen() {
     setUnit(newUnit);
   };
 
-  const isValid = weightInput && !error;
+  const displayValue = unit === 'KG' ? weightKg : weightLb;
+  const displayUnit = unit === 'KG' ? 'kg' : 'lb';
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -91,7 +83,9 @@ export default function WeightScreen() {
               onPress={() => handleUnitChange('KG')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.unitButtonText, unit === 'KG' && styles.unitButtonTextActive]}>
+              <Text
+                style={[styles.unitButtonText, unit === 'KG' && styles.unitButtonTextActive]}
+              >
                 KG
               </Text>
             </TouchableOpacity>
@@ -100,36 +94,37 @@ export default function WeightScreen() {
               onPress={() => handleUnitChange('LB')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.unitButtonText, unit === 'LB' && styles.unitButtonTextActive]}>
+              <Text
+                style={[styles.unitButtonText, unit === 'LB' && styles.unitButtonTextActive]}
+              >
                 LB
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputSection}>
-            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
-              <TextInput
-                style={styles.input}
-                value={weightInput}
-                onChangeText={handleWeightChange}
-                placeholder="Enter weight"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputUnit}>{unit.toLowerCase()}</Text>
+          <View style={styles.rulerSection}>
+            <View style={styles.valueDisplay}>
+              <Text style={styles.valueText}>
+                {displayValue}
+                <Text style={styles.unitText}>{displayUnit}</Text>
+              </Text>
             </View>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.rulerContainer}>
+              <HorizontalRuler
+                minValue={unit === 'KG' ? KG_MIN : LB_MIN}
+                maxValue={unit === 'KG' ? KG_MAX : LB_MAX}
+                step={1}
+                initialValue={unit === 'KG' ? weightKg : weightLb}
+                onValueChange={handleWeightChange}
+                unit={displayUnit}
+              />
+            </View>
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button
-            title="Next"
-            onPress={handleContinue}
-            variant="primary"
-            size="large"
-            disabled={!isValid}
-          />
+          <Button title="Next" onPress={handleContinue} variant="primary" size="large" />
         </View>
       </View>
     </SafeAreaContainer>
@@ -201,44 +196,32 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  inputSection: {
-    gap: Layout.spacing.sm,
-  },
-
-  inputContainer: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: Layout.borderRadius.xl,
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
-    borderWidth: 2,
-    borderColor: Colors.background.secondary,
-  },
-
-  inputContainerError: {
-    borderColor: '#ff334b',
-  },
-
-  input: {
+  rulerSection: {
     flex: 1,
-    fontSize: Fonts.sizes.base,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  valueDisplay: {
+    marginBottom: Layout.spacing.xxl * 2,
+  },
+
+  valueText: {
+    fontSize: 56,
+    fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
-    fontWeight: Fonts.weights.medium,
+    letterSpacing: -2,
   },
 
-  inputUnit: {
-    fontSize: Fonts.sizes.base,
+  unitText: {
+    fontSize: 24,
+    fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
-    fontWeight: Fonts.weights.medium,
-    marginLeft: Layout.spacing.sm,
   },
 
-  errorText: {
-    fontSize: Fonts.sizes.sm,
-    color: '#ff334b',
-    marginTop: Layout.spacing.xs,
-    marginLeft: Layout.spacing.sm,
+  rulerContainer: {
+    width: '100%',
+    paddingHorizontal: Layout.spacing.xl,
   },
 
   buttonContainer: {

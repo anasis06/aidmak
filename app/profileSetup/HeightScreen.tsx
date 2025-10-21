@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
+import { VerticalRuler } from '@/components/VerticalRuler';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -14,55 +15,50 @@ type Unit = 'CM' | 'FT';
 
 const CM_MIN = 100;
 const CM_MAX = 250;
+const FT_MIN = 3.3;
+const FT_MAX = 8.2;
+
+const cmToFeet = (cm: number): number => {
+  const totalInches = cm / 2.54;
+  const feet = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches % 12);
+  return parseFloat(`${feet}.${inches}`);
+};
+
+const feetToCm = (feet: number): number => {
+  const [ft, inches] = feet.toString().split('.').map(Number);
+  const totalInches = ft * 12 + (inches || 0);
+  return Math.round(totalInches * 2.54);
+};
 
 export default function HeightScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const userId = params.userId as string;
   const { updateProfileData } = useProfileSetup();
-  const [unit, setUnit] = useState<Unit>('CM');
-  const [heightInput, setHeightInput] = useState('');
-  const [error, setError] = useState('');
+  const [unit, setUnit] = useState<Unit>('FT');
+  const [heightCm, setHeightCm] = useState(167);
+  const [heightFt, setHeightFt] = useState(5.5);
 
-  const validateHeight = (value: string): boolean => {
-    if (!value) {
-      setError('');
-      return false;
+  useEffect(() => {
+    updateProfileData({ height: heightCm });
+  }, [heightCm]);
+
+  const handleHeightChange = (value: number) => {
+    if (unit === 'CM') {
+      setHeightCm(value);
+      setHeightFt(cmToFeet(value));
+    } else {
+      setHeightFt(value);
+      setHeightCm(feetToCm(value));
     }
-
-    const numValue = parseFloat(value);
-
-    if (isNaN(numValue)) {
-      setError('Please enter a valid number');
-      return false;
-    }
-
-    if (numValue < CM_MIN) {
-      setError(`Height must be at least ${CM_MIN}cm`);
-      return false;
-    }
-
-    if (numValue > CM_MAX) {
-      setError(`Height must be less than ${CM_MAX}cm`);
-      return false;
-    }
-
-    setError('');
-    return true;
-  };
-
-  const handleHeightChange = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
-    setHeightInput(numericValue);
-    validateHeight(numericValue);
   };
 
   const handleContinue = () => {
-    const heightCm = parseFloat(heightInput);
     updateProfileData({ height: heightCm });
     router.push({
       pathname: '/profileSetup/WeightScreen',
-      params: { userId }
+      params: { userId },
     });
   };
 
@@ -70,7 +66,8 @@ export default function HeightScreen() {
     setUnit(newUnit);
   };
 
-  const isValid = heightInput && !error;
+  const displayValue = unit === 'CM' ? heightCm : heightFt;
+  const displayUnit = unit === 'CM' ? 'cm' : 'ft';
 
   return (
     <SafeAreaContainer style={styles.safeArea}>
@@ -91,7 +88,9 @@ export default function HeightScreen() {
               onPress={() => handleUnitChange('CM')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.unitButtonText, unit === 'CM' && styles.unitButtonTextActive]}>
+              <Text
+                style={[styles.unitButtonText, unit === 'CM' && styles.unitButtonTextActive]}
+              >
                 CM
               </Text>
             </TouchableOpacity>
@@ -100,36 +99,38 @@ export default function HeightScreen() {
               onPress={() => handleUnitChange('FT')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.unitButtonText, unit === 'FT' && styles.unitButtonTextActive]}>
+              <Text
+                style={[styles.unitButtonText, unit === 'FT' && styles.unitButtonTextActive]}
+              >
                 FT
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputSection}>
-            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
-              <TextInput
-                style={styles.input}
-                value={heightInput}
-                onChangeText={handleHeightChange}
-                placeholder="Enter height"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputUnit}>{unit.toLowerCase()}</Text>
+          <View style={styles.rulerSection}>
+            <View style={styles.valueDisplay}>
+              <Text style={styles.valueText}>
+                {displayValue}
+                <Text style={styles.unitText}>{displayUnit}</Text>
+              </Text>
             </View>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.rulerContainer}>
+              <VerticalRuler
+                minValue={unit === 'CM' ? CM_MIN : FT_MIN}
+                maxValue={unit === 'CM' ? CM_MAX : FT_MAX}
+                step={unit === 'CM' ? 1 : 0.1}
+                initialValue={unit === 'CM' ? heightCm : heightFt}
+                onValueChange={handleHeightChange}
+                unit={displayUnit}
+                showLabels={true}
+              />
+            </View>
           </View>
         </View>
 
         <View style={styles.buttonContainer}>
-          <Button
-            title="Next"
-            onPress={handleContinue}
-            variant="primary"
-            size="large"
-            disabled={!isValid}
-          />
+          <Button title="Next" onPress={handleContinue} variant="primary" size="large" />
         </View>
       </View>
     </SafeAreaContainer>
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.secondary,
     borderRadius: Layout.borderRadius.lg,
     padding: 4,
-    marginBottom: Layout.spacing.xxl * 2,
+    marginBottom: Layout.spacing.xxl,
   },
 
   unitButton: {
@@ -201,44 +202,36 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
 
-  inputSection: {
-    gap: Layout.spacing.sm,
-  },
-
-  inputContainer: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: Layout.borderRadius.xl,
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Layout.spacing.lg,
-    borderWidth: 2,
-    borderColor: Colors.background.secondary,
-  },
-
-  inputContainerError: {
-    borderColor: '#ff334b',
-  },
-
-  input: {
+  rulerSection: {
     flex: 1,
-    fontSize: Fonts.sizes.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  valueDisplay: {
+    position: 'absolute',
+    top: '30%',
+    left: Layout.spacing.xxl,
+    zIndex: 5,
+  },
+
+  valueText: {
+    fontSize: 56,
+    fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
-    fontWeight: Fonts.weights.medium,
+    letterSpacing: -2,
   },
 
-  inputUnit: {
-    fontSize: Fonts.sizes.base,
+  unitText: {
+    fontSize: 24,
+    fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
-    fontWeight: Fonts.weights.medium,
-    marginLeft: Layout.spacing.sm,
   },
 
-  errorText: {
-    fontSize: Fonts.sizes.sm,
-    color: '#ff334b',
-    marginTop: Layout.spacing.xs,
-    marginLeft: Layout.spacing.sm,
+  rulerContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
   },
 
   buttonContainer: {
