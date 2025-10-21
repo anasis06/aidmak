@@ -13,6 +13,7 @@ import { ChevronRight, Bell } from 'lucide-react-native';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { CircularProgress } from '@/components/CircularProgress';
 import RateUsModal from '@/components/RateUsModal';
+import LogoutModal from '@/components/LogoutModal';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(80);
   const [showRateUsModal, setShowRateUsModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -84,21 +86,17 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-            router.replace('/authentication/OnboardingScreen');
-          } catch (error) {
-            console.error('Logout error:', error);
-          }
-        },
-      },
-    ]);
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      await signOut();
+      router.replace('/authentication/OnboardingScreen');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
   };
 
   return (
@@ -141,6 +139,12 @@ export default function ProfileScreen() {
         visible={showRateUsModal}
         onClose={() => setShowRateUsModal(false)}
         onSubmit={handleRateUsSubmit}
+      />
+
+      <LogoutModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onLogout={handleConfirmLogout}
       />
     </SafeAreaContainer>
   );
