@@ -117,9 +117,25 @@ export default function WeightScreen() {
   return (
     <SafeAreaContainer style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={24} color={Colors.text.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ChevronLeft size={24} color={Colors.text.primary} />
+          </TouchableOpacity>
+          {fromPreferences === 'true' && (
+            <TouchableOpacity
+              onPress={handleContinue}
+              style={styles.saveButton}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={Colors.primary.purple} />
+              ) : (
+                <Text style={styles.saveButtonText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
         {fromPreferences !== 'true' && <ProgressBar progress={3} total={8} />}
       </View>
 
@@ -202,12 +218,32 @@ const styles = StyleSheet.create({
     paddingBottom: Layout.spacing.lg,
   },
 
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Layout.spacing.lg,
+    marginBottom: Layout.spacing.md,
+  },
+
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
-    paddingLeft: Layout.spacing.lg,
-    marginBottom: Layout.spacing.md,
+  },
+
+  saveButton: {
+    paddingHorizontal: Layout.spacing.lg,
+    paddingVertical: Layout.spacing.sm,
+    minWidth: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  saveButtonText: {
+    fontSize: Fonts.sizes.base,
+    fontWeight: Fonts.weights.semibold,
+    color: Colors.primary.purple,
   },
 
   container: {
