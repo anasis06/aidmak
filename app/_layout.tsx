@@ -22,6 +22,7 @@ export default function RootLayout() {
               <Stack.Screen name="authentication/SignUpScreen" />
               <Stack.Screen name="profileSetup/LetsStartScreen" />
               <Stack.Screen name="profileSetup/GenderChooseScreen" />
+              <Stack.Screen name="offerDetail" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="+not-found" />
             </Stack>
