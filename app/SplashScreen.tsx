@@ -23,7 +23,6 @@ export default function SplashScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.appName}>AidMak</Text>
       </View>
     </View>
   );
