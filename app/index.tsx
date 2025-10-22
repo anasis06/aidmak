@@ -1,8 +1,6 @@
-// app/index.tsx
-
-import OnboardingScreen from './authentication/OnboardingScreen';
+import SplashScreen from './SplashScreen';
 
 export default function Index() {
-  return <OnboardingScreen />;
+  return <SplashScreen />;
 }
 

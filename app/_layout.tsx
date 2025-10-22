@@ -16,6 +16,7 @@ export default function RootLayout() {
         <UserProvider>
           <ProfileSetupProvider>
             <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="SplashScreen" />
               <Stack.Screen name="authentication/OnboardingScreen" />
               <Stack.Screen name="authentication/LoginScreen" />
               <Stack.Screen name="authentication/SignUpScreen" />
