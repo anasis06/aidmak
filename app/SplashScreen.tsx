@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Layers, Sparkles } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
 
@@ -19,30 +18,11 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-        <View style={styles.logoWrapper}>
-          <View style={styles.layerBack}>
-            <Layers
-              size={70}
-              color="#A78BFA"
-              strokeWidth={1.5}
-            />
-          </View>
-          <View style={styles.layerFront}>
-            <Layers
-              size={70}
-              color={Colors.primary.purple}
-              strokeWidth={1.5}
-            />
-          </View>
-          <View style={styles.sparkleWrapper}>
-            <Sparkles
-              size={20}
-              color={Colors.primary.purple}
-              strokeWidth={2}
-              fill={Colors.primary.purple}
-            />
-          </View>
-        </View>
+        <Image
+          source={require('@/assets/images/aidmak-logo-for-dark-background-01 1.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.appName}>AidMak</Text>
       </View>
     </View>
@@ -62,29 +42,9 @@ const styles = StyleSheet.create({
     gap: 24,
   },
 
-  logoWrapper: {
-    position: 'relative',
+  logo: {
     width: 120,
     height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  layerBack: {
-    position: 'absolute',
-    opacity: 0.7,
-    transform: [{ translateX: -8 }, { translateY: 8 }],
-  },
-
-  layerFront: {
-    position: 'absolute',
-    transform: [{ translateX: 4 }, { translateY: -4 }],
-  },
-
-  sparkleWrapper: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
   },
 
   appName: {
