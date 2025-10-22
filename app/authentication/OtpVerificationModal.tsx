@@ -1,5 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
@@ -16,6 +28,8 @@ interface OtpVerificationModalProps {
   countryCode?: string;
 }
 
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
 export default function OtpVerificationModal({
   visible,
   onClose,
@@ -25,21 +39,50 @@ export default function OtpVerificationModal({
 }: OtpVerificationModalProps) {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [error, setError] = useState('');
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(32);
   const [canResend, setCanResend] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
+  const [slideAnim] = useState(new Animated.Value(SCREEN_HEIGHT));
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {
-      setTimer(30);
+      setTimer(32);
       setCanResend(false);
       setOtp(['', '', '', '']);
       setError('');
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 300);
+
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 100);
+      });
+    } else {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: SCREEN_HEIGHT,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [visible]);
 
@@ -132,7 +175,7 @@ export default function OtpVerificationModal({
     await handleAutoValidate(otpString);
   };
 
-  const isOtpComplete = otp.every(digit => digit !== '');
+  const isOtpComplete = otp.every((digit) => digit !== '');
 
   const handleResend = async () => {
     if (!canResend || isResending) return;
@@ -148,7 +191,7 @@ export default function OtpVerificationModal({
         Alert.alert('OTP Resent', 'A new OTP has been sent to your phone number');
         setOtp(['', '', '', '']);
         setError('');
-        setTimer(30);
+        setTimer(32);
         setCanResend(false);
         inputRefs.current[0]?.focus();
       } else {
@@ -161,90 +204,111 @@ export default function OtpVerificationModal({
     }
   };
 
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.backButton} onPress={onClose}>
-            <ChevronLeft size={24} color={Colors.text.primary} />
-          </TouchableOpacity>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
+        <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+          <TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              <TouchableOpacity style={styles.backButton} onPress={handleClose}>
+                <ChevronLeft size={24} color={Colors.text.primary} strokeWidth={2} />
+              </TouchableOpacity>
 
-          <View style={styles.contentContainer}>
-            <Text style={styles.title}>OTP Verification Sent!</Text>
-            <Text style={styles.subtitle}>
-              A verification code will be sent to the Phone Number{' '}
-              <Text style={styles.phoneNumber}>
-                {countryCode} {maskPhoneNumber(phoneNumber)}
-              </Text>{' '}
-              for your account verification process.
-            </Text>
-
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <View key={index} style={styles.otpBox}>
-                  <TextInput
-                    ref={(ref) => (inputRefs.current[index] = ref)}
-                    style={styles.otpInput}
-                    value={digit}
-                    onChangeText={(text) => handleChange(text, index)}
-                    onKeyPress={({ nativeEvent }) =>
-                      handleKeyPress(nativeEvent.key, index)
-                    }
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    selectTextOnFocus
-                  />
-                </View>
-              ))}
-            </View>
-
-            {isValidating && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={Colors.primary.purple} />
-                <Text style={styles.loadingText}>Validating OTP...</Text>
-              </View>
-            )}
-
-            {error && !isValidating ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <View style={styles.resendSection}>
-              {!canResend ? (
-                <Text style={styles.resendText}>
-                  Resend code in{' '}
-                  <Text style={styles.timerText}>
-                    {timer} seconds
-                  </Text>
+              <View style={styles.contentContainer}>
+                <Text style={styles.title}>OTP Verification Sent!</Text>
+                <Text style={styles.subtitle}>
+                  A verification code will be sent to the Phone Number{' '}
+                  <Text style={styles.phoneNumber}>
+                    {countryCode} {maskPhoneNumber(phoneNumber)}
+                  </Text>{' '}
+                  for your account verification process.
                 </Text>
-              ) : (
-                <TouchableOpacity
-                  onPress={handleResend}
-                  disabled={isResending}
-                  style={styles.resendButton}
-                >
-                  <Text style={styles.resendButtonText}>
-                    {isResending ? 'Resending...' : 'Resend OTP'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
 
-            <Button
-              title="Submit"
-              onPress={handleVerify}
-              variant="primary"
-              size="large"
-              style={styles.submitButton}
-              disabled={!isOtpComplete || isValidating}
-              loading={isValidating}
-            />
-          </View>
-        </View>
-      </View>
+                <View style={styles.otpContainer}>
+                  {otp.map((digit, index) => (
+                    <View key={index} style={styles.otpBox}>
+                      <TextInput
+                        ref={(ref) => (inputRefs.current[index] = ref)}
+                        style={styles.otpInput}
+                        value={digit}
+                        onChangeText={(text) => handleChange(text, index)}
+                        onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        selectTextOnFocus
+                        placeholderTextColor={Colors.text.tertiary}
+                      />
+                    </View>
+                  ))}
+                </View>
+
+                {isValidating && (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={Colors.primary.purple} />
+                    <Text style={styles.loadingText}>Validating OTP...</Text>
+                  </View>
+                )}
+
+                {error && !isValidating ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <View style={styles.resendSection}>
+                  {!canResend ? (
+                    <Text style={styles.resendText}>
+                      Resend code in <Text style={styles.timerText}>{timer} seconds.</Text>
+                    </Text>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleResend}
+                      disabled={isResending}
+                      style={styles.resendButton}
+                    >
+                      <Text style={styles.resendButtonText}>
+                        {isResending ? 'Resending...' : 'Resend OTP'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <Button
+                  title="Submit"
+                  onPress={handleVerify}
+                  variant="primary"
+                  size="large"
+                  style={styles.submitButton}
+                  disabled={!isOtpComplete || isValidating}
+                  loading={isValidating}
+                />
+              </View>
+
+              <View style={styles.bottomIndicator} />
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -252,18 +316,18 @@ export default function OtpVerificationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Layout.spacing.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
   },
 
   modalContainer: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: Layout.borderRadius.xxl,
-    padding: Layout.spacing.xxl,
-    width: '100%',
-    maxWidth: 400,
+    backgroundColor: Colors.background.secondary,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: Layout.spacing.xl,
+    paddingBottom: Layout.spacing.md,
+    paddingHorizontal: Layout.spacing.xl,
+    minHeight: 520,
   },
 
   backButton: {
@@ -277,20 +341,21 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: Fonts.weights.bold,
     color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: Layout.spacing.md,
-    lineHeight: 30,
+    lineHeight: 32,
   },
 
   subtitle: {
-    fontSize: Fonts.sizes.sm,
+    fontSize: 14,
     color: Colors.text.secondary,
     textAlign: 'center',
-    marginBottom: Layout.spacing.xxl * 1.5,
-    lineHeight: 20,
+    marginBottom: Layout.spacing.xxl,
+    lineHeight: 22,
+    paddingHorizontal: Layout.spacing.xs,
   },
 
   phoneNumber: {
@@ -301,9 +366,10 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Layout.spacing.md,
+    gap: 16,
     width: '100%',
-    marginBottom: Layout.spacing.md,
+    marginBottom: Layout.spacing.lg,
+    paddingHorizontal: Layout.spacing.md,
   },
 
   otpBox: {
@@ -313,15 +379,16 @@ const styles = StyleSheet.create({
 
   otpInput: {
     width: '100%',
-    height: 70,
+    height: 65,
     backgroundColor: 'transparent',
     borderBottomWidth: 2,
     borderBottomColor: Colors.text.primary,
-    fontSize: 40,
-    fontWeight: Fonts.weights.bold,
+    fontSize: 48,
+    fontWeight: Fonts.weights.regular,
     color: Colors.text.primary,
     textAlign: 'center',
     padding: 0,
+    paddingBottom: 8,
   },
 
   loadingContainer: {
@@ -348,17 +415,19 @@ const styles = StyleSheet.create({
 
   resendSection: {
     alignItems: 'center',
-    marginBottom: Layout.spacing.xxl,
+    marginBottom: Layout.spacing.xl,
+    minHeight: 24,
   },
 
   resendText: {
-    fontSize: Fonts.sizes.sm,
+    fontSize: 14,
     color: Colors.text.secondary,
+    textAlign: 'center',
   },
 
   timerText: {
-    color: Colors.text.primary,
-    fontWeight: Fonts.weights.semibold,
+    color: Colors.text.secondary,
+    fontWeight: Fonts.weights.regular,
   },
 
   resendButton: {
@@ -374,5 +443,14 @@ const styles = StyleSheet.create({
 
   submitButton: {
     width: '100%',
+  },
+
+  bottomIndicator: {
+    width: 134,
+    height: 5,
+    backgroundColor: Colors.text.primary,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: Layout.spacing.lg,
   },
 });
