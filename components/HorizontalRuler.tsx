@@ -74,15 +74,7 @@ export function HorizontalRuler({
             ]}
           />
           {isMajorTick && (
-             <View style={styles.horizontalLabelContainer}>
-    {value.toString().split("").map((digit, index) => (
-      <Text key={index} style={styles.horizontalDigit}>
-        {digit}
-      </Text>
-    ))}
-  </View>
-          )}
-        </View>
+            <Text style={styles.tickLabel}>{value}</Text>
       );
     }
     return ticks;
