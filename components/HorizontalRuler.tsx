@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     left: SCREEN_WIDTH / 2 - 1,
     bottom: 0,
     top: 0,
-    width: 6,
+    width: 2,
     backgroundColor: Colors.text.primary,
     zIndex: 10,
   },
