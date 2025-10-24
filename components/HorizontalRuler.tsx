@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
 
   tickMajor: {
-    width: 8,
+    width: 2,
     height: 25,
     backgroundColor: Colors.text.secondary,
   },
