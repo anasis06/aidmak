@@ -75,6 +75,8 @@ export function HorizontalRuler({
           />
           {isMajorTick && (
             <Text style={styles.tickLabel}>{value}</Text>
+          )}
+        </View>
       );
     }
     return ticks;
