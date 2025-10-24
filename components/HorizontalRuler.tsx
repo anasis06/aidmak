@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
 
   tick: {
-    width: 6,
+    width: 1,
     height: 15,
     backgroundColor: Colors.text.tertiary,
   },
