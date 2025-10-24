@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.sm,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
-    marginTop: Layout.spacing.sm,
+    marginTop: Layout.spacing.xs,
     position: 'absolute',
     bottom: 25,
   },
