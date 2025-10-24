@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     marginTop: Layout.spacing.xs,
     position: 'absolute',
-    bottom: -28,
+    bottom: -20,
   },
 });
