@@ -109,6 +109,20 @@ export const userService = {
     return data;
   },
 
+  getUserById: async (userId: string) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
   verifyUser: async (userId: string) => {
     const { data, error } = await supabase
       .from('users')

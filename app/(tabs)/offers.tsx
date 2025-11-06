@@ -11,9 +11,9 @@ import { Offer } from '@/types/offer';
 import { offersService, OfferData } from '@/services/offersService';
 
 const imageMap: { [key: string]: any } = {
-  'Group.jpg': require('@/assets/images/Group.jpg'),
-  'unnamed 1 (2).png': require('@/assets/images/unnamed 1 (2).png'),
-  'unnamed 1 (3).png': require('@/assets/images/unnamed 1 (3).png'),
+  'Group.png': require('@/assets/images/Group.png'),
+  'OBJECTS.png': require('@/assets/images/OBJECTS.png'),
+  'Vector.png': require('@/assets/images/Vector.png'),
 };
 
 export default function OffersScreen() {

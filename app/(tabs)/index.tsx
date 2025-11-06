@@ -15,7 +15,9 @@ import { Fonts } from '@/constants/Fonts';
 import { Layout } from '@/constants/Layout';
 import { ChevronLeft, ChevronRight, Bell } from 'lucide-react-native';
 import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/hooks/useAuth';
 import { wardrobeService, WardrobeItem, Outfit } from '@/services/wardrobeService';
+import { userService } from '@/services/userService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ITEM_WIDTH = (SCREEN_WIDTH - 48) / 2;
@@ -27,7 +29,8 @@ const categoryTabs: Category[] = ['Tops', 'Bottom', 'Full Body', 'Layers', 'Shoe
 const subCategoryTabs: SubCategory[] = ['Casual', 'Formal', 'Ethnic', 'Party'];
 
 export default function HomeScreen() {
-  const { user } = useUser();
+  const { user } = useAuth();
+  const [fullName, setFullName] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('Bottom');
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory>('Casual');
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
@@ -47,9 +50,10 @@ export default function HomeScreen() {
     try {
       setLoading(true);
 
-      const [items, outfits] = await Promise.all([
+      const [items, outfits, userData] = await Promise.all([
         wardrobeService.getWardrobeItemsBySubCategory(user.id, selectedSubCategory),
         wardrobeService.getRecentOutfits(user.id, 3),
+        fetchUserName(user.id),
       ]);
 
       setWardrobeItems(items);
@@ -58,6 +62,17 @@ export default function HomeScreen() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserName = async (userId: string) => {
+    try {
+      const userData = await userService.getUserById(userId);
+      if (userData?.full_name) {
+        setFullName(userData.full_name);
+      }
+    } catch (error) {
+      console.error('Error fetching user name:', error);
     }
   };
 
@@ -140,11 +155,7 @@ export default function HomeScreen() {
       <View style={styles.gridContainer}>
         {wardrobeItems.slice(0, 4).map((item) => (
           <TouchableOpacity key={item.id} style={styles.gridItem} activeOpacity={0.8}>
-            <Image
-              source={require('@/assets/images/unnamed 1 (2).png')}
-              style={styles.gridItemImage}
-              resizeMode="cover"
-            />
+            <View style={styles.gridItemPlaceholder} />
           </TouchableOpacity>
         ))}
       </View>
@@ -170,11 +181,7 @@ export default function HomeScreen() {
         >
           {recentOutfits.map((outfit) => (
             <TouchableOpacity key={outfit.id} style={styles.recentItem} activeOpacity={0.8}>
-              <Image
-                source={require('@/assets/images/unnamed 1 (2).png')}
-                style={styles.recentItemImage}
-                resizeMode="cover"
-              />
+              <View style={styles.recentItemPlaceholder} />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -188,7 +195,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.headerLabel}>Home</Text>
-            <Text style={styles.headerGreeting}>Hey, {user?.first_name || 'User'}!</Text>
+            <Text style={styles.headerGreeting}>Hey{fullName ? `, ${fullName}` : ''}!</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
             <Bell size={24} color={Colors.primary.purple} strokeWidth={2} />
@@ -198,7 +205,7 @@ export default function HomeScreen() {
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('@/assets/images/Group.jpg')}
+              source={require('@/assets/images/Group.png')}
               style={styles.avatarImage}
               resizeMode="contain"
             />
@@ -397,6 +404,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
+  gridItemPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#2A2A2A',
+  },
+
   loadingContainer: {
     height: 200,
     justifyContent: 'center',
@@ -470,6 +483,12 @@ const styles = StyleSheet.create({
   recentItemImage: {
     width: '100%',
     height: '100%',
+  },
+
+  recentItemPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#2A2A2A',
   },
 
   bottomSpacer: {
