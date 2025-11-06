@@ -86,7 +86,11 @@ export default function OffersScreen() {
     <SafeAreaContainer>
       <View style={styles.header}>
         <Text style={styles.title}>Offers</Text>
-        <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => router.push('/notifications')}
+          activeOpacity={0.7}
+        >
           <Bell size={24} color={Colors.primary.purple} strokeWidth={2} />
         </TouchableOpacity>
       </View>

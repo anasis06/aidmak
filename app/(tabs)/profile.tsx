@@ -103,7 +103,11 @@ export default function ProfileScreen() {
     <SafeAreaContainer style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.notificationButton}>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => router.push('/notifications')}
+          activeOpacity={0.7}
+        >
           <Bell size={24} color={Colors.primary.purple} />
         </TouchableOpacity>
       </View>
