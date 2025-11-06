@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
@@ -26,6 +26,129 @@ export default function SignUpScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
+
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const checkForDuplicates = async (emailValue: string, phoneValue: string, countryCodeValue: string) => {
+    if (!emailValue || !phoneValue) return;
+
+    const emailError = validateEmail(emailValue);
+    const phoneError = validatePhoneNumber(phoneValue);
+
+    if (emailError || phoneError) return;
+
+    try {
+      setIsCheckingDuplicate(true);
+      const existsCheck = await userService.checkUserExists(emailValue, phoneValue, countryCodeValue);
+
+      if (existsCheck.exists) {
+        const newErrors: Record<string, string> = {};
+        if (existsCheck.field === 'email') {
+          newErrors.email = existsCheck.message || 'This email already exists.';
+        } else if (existsCheck.field === 'phone') {
+          newErrors.phoneNumber = existsCheck.message || 'This number already exists.';
+        }
+        setErrors(prevErrors => ({
+          ...prevErrors,
+          ...newErrors
+        }));
+      } else {
+        setErrors(prevErrors => {
+          const newErrors = { ...prevErrors };
+          if (existsCheck.field === 'email' || !existsCheck.field) {
+            delete newErrors.email;
+          }
+          if (existsCheck.field === 'phone' || !existsCheck.field) {
+            delete newErrors.phoneNumber;
+          }
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+    } finally {
+      setIsCheckingDuplicate(false);
+    }
+  };
+
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (email && phoneNumber) {
+      debounceTimerRef.current = setTimeout(() => {
+        checkForDuplicates(email, phoneNumber, countryCode);
+      }, 500);
+    }
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [email, phoneNumber, countryCode]);
+
+  const handleFullNameChange = (value: string) => {
+    setFullName(value);
+    if (errors.fullName) {
+      const nameError = validateFullName(value);
+      if (!nameError) {
+        setErrors(prevErrors => {
+          const newErrors = { ...prevErrors };
+          delete newErrors.fullName;
+          return newErrors;
+        });
+      }
+    }
+  };
+
+  const handlePhoneNumberChange = (value: string) => {
+    setPhoneNumber(value);
+
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
+      if (newErrors.phoneNumber && newErrors.phoneNumber.includes('already exists')) {
+        delete newErrors.phoneNumber;
+      }
+      return newErrors;
+    });
+
+    if (errors.phoneNumber && !errors.phoneNumber.includes('already exists')) {
+      const phoneError = validatePhoneNumber(value);
+      if (!phoneError) {
+        setErrors(prevErrors => {
+          const newErrors = { ...prevErrors };
+          delete newErrors.phoneNumber;
+          return newErrors;
+        });
+      }
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
+      if (newErrors.email && newErrors.email.includes('already exists')) {
+        delete newErrors.email;
+      }
+      return newErrors;
+    });
+
+    if (errors.email && !errors.email.includes('already exists')) {
+      const emailError = validateEmail(value);
+      if (!emailError) {
+        setErrors(prevErrors => {
+          const newErrors = { ...prevErrors };
+          delete newErrors.email;
+          return newErrors;
+        });
+      }
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -120,7 +243,12 @@ export default function SignUpScreen() {
     }
   };
 
-  const isFormValid = fullName && phoneNumber && email && Object.keys(errors).length === 0;
+  const hasNonDuplicateErrors = Object.keys(errors).some(key => {
+    const error = errors[key];
+    return error && !error.includes('already exists');
+  });
+
+  const isFormValid = fullName && phoneNumber && email && !hasNonDuplicateErrors && !isCheckingDuplicate;
 
   return (
     <SafeAreaContainer>
@@ -144,7 +272,7 @@ export default function SignUpScreen() {
                 label="Full Name"
                 placeholder="Enter your full name"
                 value={fullName}
-                onChangeText={setFullName}
+                onChangeText={handleFullNameChange}
                 error={errors.fullName}
                 autoCapitalize="words"
               />
@@ -153,7 +281,7 @@ export default function SignUpScreen() {
                 label="Phone number"
                 placeholder="Enter your Mobile Number"
                 value={phoneNumber}
-                onChangeText={setPhoneNumber}
+                onChangeText={handlePhoneNumberChange}
                 countryCode={countryCode}
                 onCountryCodeChange={setCountryCode}
                 error={errors.phoneNumber}
@@ -164,7 +292,7 @@ export default function SignUpScreen() {
                 label="Email"
                 placeholder="Enter your email address"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}
                 error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
