@@ -47,7 +47,7 @@ export default function SignUpScreen() {
         if (existsCheck.field === 'email') {
           newErrors.email = existsCheck.message || 'This email already exists.';
         } else if (existsCheck.field === 'phone') {
-          newErrors.phoneNumber = existsCheck.message || 'This number already exists.';
+          newErrors.phoneNumber = existsCheck.message || 'This phone number already exists, please enter a different number.';
         }
         setErrors(prevErrors => ({
           ...prevErrors,
@@ -178,7 +178,7 @@ export default function SignUpScreen() {
         if (existsCheck.field === 'email') {
           newErrors.email = existsCheck.message || 'This email already exists.';
         } else if (existsCheck.field === 'phone') {
-          newErrors.phoneNumber = existsCheck.message || 'This number already exists.';
+          newErrors.phoneNumber = existsCheck.message || 'This phone number already exists, please enter a different number.';
         }
         setErrors(newErrors);
         setIsLoading(false);

@@ -42,7 +42,7 @@ export const userService = {
       return {
         exists: true,
         field: 'phone',
-        message: 'This number already exists.'
+        message: 'This phone number already exists, please enter a different number.'
       };
     }
 
@@ -70,7 +70,7 @@ export const userService = {
           throw new Error('This email already exists.');
         }
         if (error.message.includes('phone_number')) {
-          throw new Error('This number already exists.');
+          throw new Error('This phone number already exists, please enter a different number.');
         }
       }
       throw new Error(error.message);
