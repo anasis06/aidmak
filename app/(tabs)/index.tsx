@@ -9,6 +9,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaContainer } from '@/components/SafeAreaContainer';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
@@ -29,6 +30,7 @@ const categoryTabs: Category[] = ['Tops', 'Bottom', 'Full Body', 'Layers', 'Shoe
 const subCategoryTabs: SubCategory[] = ['Casual', 'Formal', 'Ethnic', 'Party'];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const [fullName, setFullName] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('Bottom');
@@ -197,7 +199,11 @@ export default function HomeScreen() {
             <Text style={styles.headerLabel}>Home</Text>
             <Text style={styles.headerGreeting}>Hey{fullName ? `, ${fullName}` : ''}!</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/notifications')}
+          >
             <Bell size={24} color={Colors.primary.purple} strokeWidth={2} />
           </TouchableOpacity>
         </View>
