@@ -134,6 +134,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    width: 120,
   },
 
   tick: {
@@ -149,10 +150,11 @@ const styles = StyleSheet.create({
   },
 
   tickLabel: {
-    fontSize: Fonts.sizes.lg,
+    fontSize: Fonts.sizes.base,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
-    marginLeft: Layout.spacing.md,
-    width: 30,
+    marginLeft: Layout.spacing.sm,
+    minWidth: 50,
+    textAlign: 'right',
   },
 });

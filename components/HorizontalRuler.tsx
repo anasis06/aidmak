@@ -67,15 +67,15 @@ export function HorizontalRuler({
 
       ticks.push(
         <View key={i} style={styles.tickColumn}>
+          {isMajorTick && (
+            <Text style={styles.tickLabel}>{value}</Text>
+          )}
           <View
             style={[
               styles.tick,
               isMajorTick && styles.tickMajor,
             ]}
           />
-          {isMajorTick && (
-            <Text style={styles.tickLabel}>{value}</Text>
-          )}
         </View>
       );
     }
@@ -111,7 +111,7 @@ export function HorizontalRuler({
 
 const styles = StyleSheet.create({
   container: {
-    height: 120,
+    height: 100,
     position: 'relative',
     justifyContent: 'flex-end',
   },
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH,
     alignItems: 'center',
     justifyContent: 'flex-end',
+    height: 80,
   },
 
   tick: {
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
 
   tickMajor: {
     width: 2,
-    height: 25,
+    height: 30,
     backgroundColor: Colors.text.secondary,
   },
 
@@ -157,8 +158,8 @@ const styles = StyleSheet.create({
     fontSize: Fonts.sizes.sm,
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
-    marginTop: Layout.spacing.xs,
-    position: 'absolute',
-    bottom: 25,
+    marginBottom: Layout.spacing.xs,
+    textAlign: 'center',
+    minWidth: 40,
   },
 });
