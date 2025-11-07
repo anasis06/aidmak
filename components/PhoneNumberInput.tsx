@@ -52,6 +52,7 @@ export const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           style={[styles.countrySelector, error && styles.inputError]}
           onPress={() => setModalVisible(true)}
         >
+          <Text style={styles.flag}>{selectedCountry.flag}</Text>
           <Text style={styles.countryCode}>{selectedCountry.dialCode}</Text>
           <ChevronDown size={16} color={Colors.text.tertiary} />
         </TouchableOpacity>
@@ -105,7 +106,11 @@ const styles = StyleSheet.create({
     gap: Layout.spacing.xs,
     borderWidth: 1,
     borderColor: Colors.border.light,
-    minWidth: 80,
+    minWidth: 100,
+  },
+
+  flag: {
+    fontSize: 20,
   },
 
   countryCode: {
