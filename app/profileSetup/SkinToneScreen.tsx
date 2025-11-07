@@ -33,12 +33,12 @@ const skinToneOptions: SkinToneOption[] = [
   {
     id: 'dusky',
     label: 'Dusky',
-    image: require('@/assets/images/avatar-medium.png'),
+    image: require('@/assets/images/unnamed 1 (2).png'),
   },
   {
     id: 'dark',
     label: 'Dark',
-    image: require('@/assets/images/avatar-dark.png'),
+    image: require('@/assets/images/unnamed 1 (2).png'),
   },
 ];
 
