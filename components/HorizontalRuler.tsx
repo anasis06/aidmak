@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     marginBottom: Layout.spacing.xs,
     textAlign: 'center',
-    minWidth: 40,
+    minWidth: 100,
+    flexShrink: 0,
   },
 });
