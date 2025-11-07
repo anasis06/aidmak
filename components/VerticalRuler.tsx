@@ -76,7 +76,7 @@ export function VerticalRuler({
             ]}
           />
           {showLabels && isMajorTick && (
-            <Text style={styles.tickLabel}>{value}</Text>
+            <Text style={styles.tickLabel}>{`${value} ${unit}`}</Text>
           )}
         </View>
       );
