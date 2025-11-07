@@ -38,7 +38,7 @@ const skinToneOptions: SkinToneOption[] = [
   {
     id: 'dark',
     label: 'Dark',
-    image: require('@/assets/images/unnamed 1 (2).png'),
+    image: require('@/assets/images/unnamed 1 (3).png'),
   },
 ];
 
