@@ -156,6 +156,6 @@ const styles = StyleSheet.create({
     marginLeft: Layout.spacing.sm,
     minWidth: 100,
     textAlign: 'right',
-      flexShrink: 0,
+    flexShrink: 0,
   },
 });
