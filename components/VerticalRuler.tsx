@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
     fontWeight: Fonts.weights.medium,
     color: Colors.text.secondary,
     marginLeft: Layout.spacing.sm,
-    minWidth: 50,
+    minWidth: 100,
     textAlign: 'right',
+      flexShrink: 0,
   },
 });
